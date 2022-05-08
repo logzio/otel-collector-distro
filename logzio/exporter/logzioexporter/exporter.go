@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logzioexporter // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/logzioexporter"
+package logzioexporter // Package logzioexporter import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/logzioexporter"
 
 import (
 	"context"
@@ -84,7 +84,6 @@ func newLogzioTracesExporter(config *Config, set component.ExporterCreateSetting
 	if err := config.validate(); err != nil {
 		return nil, err
 	}
-
 	return exporterhelper.NewTracesExporter(
 		config,
 		set,

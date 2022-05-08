@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/exporter/logzioexporter
+module github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter
 
 go 1.17
 
