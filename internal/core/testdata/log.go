@@ -90,7 +90,20 @@ func fillLogOne(log plog.LogRecord) {
 	attrs.InsertString("app", "server")
 	attrs.InsertInt("instance_num", 1)
 
-	log.Body().SetStringVal("This is a log message")
+	// nested body map
+	attVal := pcommon.NewValueMap()
+	attNestedVal := pcommon.NewValueMap()
+
+	attMap := attVal.MapVal()
+	attMap.InsertDouble("23", 45)
+	attMap.InsertString("foo", "bar")
+	attMap.InsertString("message", "hello there")
+	attNestedMap := attNestedVal.MapVal()
+	attNestedMap.InsertString("string", "v1")
+	attNestedMap.InsertDouble("number", 499)
+	attMap.Insert("nested", attNestedVal)
+	attVal.CopyTo(log.Body())
+
 }
 
 func fillLogTwo(log plog.LogRecord) {

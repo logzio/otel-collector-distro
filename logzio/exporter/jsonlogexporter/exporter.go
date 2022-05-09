@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/logzio/logzio-go"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
@@ -102,55 +103,90 @@ func getListenerUrl(region string) string {
 	return url
 }
 
+func convertAttributeValue(value pcommon.Value) interface{} {
+	switch value.Type() {
+	case pcommon.ValueTypeInt:
+		return value.IntVal()
+	case pcommon.ValueTypeBool:
+		return value.BoolVal()
+	case pcommon.ValueTypeDouble:
+		return value.DoubleVal()
+	case pcommon.ValueTypeString:
+		return value.StringVal()
+	case pcommon.ValueTypeMap:
+		values := map[string]interface{}{}
+		value.MapVal().Range(func(k string, v pcommon.Value) bool {
+			values[k] = convertAttributeValue(v)
+			return true
+		})
+		return values
+	case pcommon.ValueTypeSlice:
+		arrayVal := value.SliceVal()
+		values := make([]interface{}, arrayVal.Len())
+		for i := 0; i < arrayVal.Len(); i++ {
+			values[i] = convertAttributeValue(arrayVal.At(i))
+		}
+		return values
+	case pcommon.ValueTypeEmpty:
+		return nil
+	default:
+		return value
+	}
+}
+
 func (e *jsonlogexporter) Capabilities() consumer.Capabilities {
 	return consumer.Capabilities{MutatesData: false}
 }
 
-func (e *jsonlogexporter) ConvertLogRecordToJson(log plog.LogRecord) ([]byte, error) {
+// ConvertLogRecordToJson Takes `plog.LogRecord` and `pcommon.Resource` input, outputs byte array that represents the log record as json string
+func (e *jsonlogexporter) ConvertLogRecordToJson(log plog.LogRecord, resource pcommon.Resource) ([]byte, error) {
 	jsonLog := map[string]interface{}{}
-	//test
-	jsonLog["type"] = "otel-logs-test"
-	//test
-	jsonLog["message"] = log.Body().AsString()
+	if spanID := log.SpanID().HexString(); spanID != "" {
+		jsonLog["spanID"] = spanID
+	}
+	if traceID := log.TraceID().HexString(); traceID != "" {
+		jsonLog["traceID"] = traceID
+	}
+	if log.SeverityText() != "" {
+		jsonLog["level"] = log.SeverityText()
+	}
 	jsonLog["@timestamp"] = log.Timestamp().AsTime()
-	jsonLog["level"] = log.SeverityText()
-	log.Attributes().Range(func(k string, v pcommon.Value) bool {
-		switch v.Type() {
-		case pcommon.ValueTypeString:
-			jsonLog[k] = v.StringVal()
-		case pcommon.ValueTypeInt:
-			jsonLog[k] = v.IntVal()
-		case pcommon.ValueTypeDouble:
-			jsonLog[k] = v.DoubleVal()
-		case pcommon.ValueTypeBool:
-			jsonLog[k] = v.BoolVal()
-		case pcommon.ValueTypeBytes:
-			jsonLog[k] = v.BytesVal()
-		case pcommon.ValueTypeMap:
-			jsonLog[k] = v.MapVal()
-		}
+
+	// add resource attributes to each json log
+	resource.Attributes().Range(func(k string, v pcommon.Value) bool {
+		jsonLog[k] = convertAttributeValue(v)
 		return true
 	})
+	// add log record attributes to each json log
+	log.Attributes().Range(func(k string, v pcommon.Value) bool {
+		jsonLog[k] = convertAttributeValue(v)
+		return true
+	})
+
+	switch log.Body().Type() {
+	case pcommon.ValueTypeString:
+		jsonLog["message"] = log.Body().StringVal()
+	case pcommon.ValueTypeMap:
+		bodyFieldsMap := convertAttributeValue(log.Body()).(map[string]interface{})
+		for key, value := range bodyFieldsMap {
+			jsonLog[key] = value
+		}
+	}
 	buf, err := json.Marshal(jsonLog)
-	//fmt.Printf("json data: %s\n", buf)
+	fmt.Printf("json data: %s\n", buf)
 	return buf, err
 }
 
 func (e *jsonlogexporter) ConsumeLogs(_ context.Context, ld plog.Logs) error {
 	resourceLogs := ld.ResourceLogs()
 	for i := 0; i < resourceLogs.Len(); i++ {
-		resourceAttributes := resourceLogs.At(i).Resource().Attributes()
+		resource := resourceLogs.At(i).Resource()
 		scopeLogs := resourceLogs.At(i).ScopeLogs()
 		for j := 0; j < scopeLogs.Len(); j++ {
 			logRecords := scopeLogs.At(j).LogRecords()
 			for k := 0; k < logRecords.Len(); k++ {
 				log := logRecords.At(k)
-				// add resource attributes to each log
-				resourceAttributes.Range(func(k string, v pcommon.Value) bool {
-					log.Attributes().Insert(k, v)
-					return true
-				})
-				buf, err := e.ConvertLogRecordToJson(log)
+				buf, err := e.ConvertLogRecordToJson(log, resource)
 				if err != nil {
 					return err
 				}

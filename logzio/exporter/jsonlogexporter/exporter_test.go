@@ -16,21 +16,32 @@ package jsonlogexporter
 import (
 	"context"
 	"errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/component/componenttest"
+	"go.opentelemetry.io/collector/config"
+	"internal/core/testdata"
 	"io/ioutil"
 	"os"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	testdata "internal/core/testdata"
 )
 
-func TestFileLogsExporter(t *testing.T) {
-	jle := &jsonlogexporter{token: tempFileName(t)}
-	require.NotNil(t, jle)
-
+func TestJsonLogLogsExporter(t *testing.T) {
+	cfg := Config{
+		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
+		Region:           "us",
+		Token:            "",
+		DrainInterval:    3,
+		QueueMaxLength:   500000,
+		QueueCapacity:    20 * 1024 * 1024,
+	}
+	params := componenttest.NewNopExporterCreateSettings()
+	exporter, err := createLogsExporter(context.Background(), params, &cfg)
+	require.NotNil(t, exporter)
+	require.NoError(t, err)
+	ctx := context.Background()
 	ld := testdata.GenerateLogsTwoLogRecordsSameResource()
-	assert.NoError(t, jle.ConsumeLogs(context.Background(), ld))
+	assert.NoError(t, exporter.ConsumeLogs(ctx, ld))
 
 }
 

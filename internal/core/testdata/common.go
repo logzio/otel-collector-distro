@@ -42,39 +42,3 @@ func initResourceAttributes1(dest pcommon.Map) {
 func initResourceAttributes2(dest pcommon.Map) {
 	pcommon.NewMapFromRaw(resourceAttributes2).CopyTo(dest)
 }
-
-func initSpanAttributes(dest pcommon.Map) {
-	pcommon.NewMapFromRaw(spanAttributes).CopyTo(dest)
-}
-
-func initSpanEventAttributes(dest pcommon.Map) {
-	pcommon.NewMapFromRaw(spanEventAttributes).CopyTo(dest)
-}
-
-func initSpanLinkAttributes(dest pcommon.Map) {
-	pcommon.NewMapFromRaw(spanLinkAttributes).CopyTo(dest)
-}
-
-func initMetricAttachment(dest pcommon.Map) {
-	dest.UpsertString(TestAttachmentKey, TestAttachmentValue)
-}
-
-func initMetricAttributes1(dest pcommon.Map) {
-	dest.UpsertString(TestLabelKey1, TestLabelValue1)
-}
-
-func initMetricAttributes12(dest pcommon.Map) {
-	dest.UpsertString(TestLabelKey1, TestLabelValue1)
-	dest.UpsertString(TestLabelKey2, TestLabelValue2)
-	dest.Sort()
-}
-
-func initMetricAttributes13(dest pcommon.Map) {
-	dest.UpsertString(TestLabelKey1, TestLabelValue1)
-	dest.UpsertString(TestLabelKey3, TestLabelValue3)
-	dest.Sort()
-}
-
-func initMetricAttributes2(dest pcommon.Map) {
-	dest.UpsertString(TestLabelKey2, TestLabelValue2)
-}
