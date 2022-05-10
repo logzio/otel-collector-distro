@@ -19,33 +19,50 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/logzio/logzio-go"
+	"github.com/hashicorp/go-hclog"
+
+	sender "github.com/logzio/logzio-go"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	_ "go.opentelemetry.io/collector/model/otlp"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
-	"log"
+	"go.uber.org/zap"
 	"os"
+)
+
+const (
+	loggerName = "json-log-exporter"
 )
 
 // jsonlogexporter is the implementation of file exporter that writes telemetry data to a file
 // in Protobuf-JSON format.
 type jsonlogexporter struct {
 	token  string
-	sender logzio.LogzioSender
+	sender sender.LogzioSender
+	logger hclog.Logger
 }
 
 func newJsonLogExporter(config *Config, params component.ExporterCreateSettings) (*jsonlogexporter, error) {
-	l, err := logzio.New(
+	// create logger
+	logger := hclog2ZapLogger{
+		Zap:  params.Logger,
+		name: loggerName,
+	}
+	// generate url based on input
+	url := getListenerUrl(config.Region, &logger)
+	if config.CustomEndpoint != "" {
+		url = config.CustomEndpoint
+	}
+	sender, err := sender.New(
 		config.Token,
-		logzio.SetDebug(os.Stderr),
-		logzio.SetUrl(getListenerUrl(config.Region)),
-		logzio.SetInMemoryQueue(true),
-		logzio.SetCompress(true),
-		logzio.SetlogCountLimit(config.QueueMaxLength),
-		logzio.SetinMemoryCapacity(uint64(config.QueueCapacity)),
+		sender.SetDebug(os.Stderr),
+		sender.SetUrl(url),
+		sender.SetInMemoryQueue(true),
+		sender.SetCompress(true),
+		sender.SetlogCountLimit(config.QueueMaxLength),
+		sender.SetinMemoryCapacity(uint64(config.QueueCapacity)),
 	)
 	if err != nil {
 		return nil, err
@@ -56,10 +73,10 @@ func newJsonLogExporter(config *Config, params component.ExporterCreateSettings)
 	if err != nil {
 		return nil, err
 	}
-
 	return &jsonlogexporter{
 		token:  config.Token,
-		sender: *l,
+		sender: *sender,
+		logger: &logger,
 	}, nil
 }
 
@@ -78,7 +95,7 @@ func newJsonLogLogsExporter(config *Config, set component.ExporterCreateSettings
 		exporterhelper.WithShutdown(exporter.Shutdown))
 }
 
-func getListenerUrl(region string) string {
+func getListenerUrl(region string, logger hclog.Logger) string {
 	var url string
 	switch region {
 	case "us":
@@ -96,14 +113,14 @@ func getListenerUrl(region string) string {
 	case "wa":
 		url = "https://listener-wa.logz.io:8071"
 	default:
-		log.Printf("Region '%s' is not supported yet, setting url to default value", region)
+		logger.Info(fmt.Sprintf("Region '%s' is not supported yet, setting url to default value", region))
 		url = "https://listener.logz.io:8071"
 	}
-	log.Printf("Setting logzio listener url to: %s", url)
+	logger.Debug(fmt.Sprintf("Setting logzio listener url to: %s", url))
 	return url
 }
 
-func convertAttributeValue(value pcommon.Value) interface{} {
+func (e *jsonlogexporter) convertAttributeValue(value pcommon.Value) interface{} {
 	switch value.Type() {
 	case pcommon.ValueTypeInt:
 		return value.IntVal()
@@ -116,7 +133,7 @@ func convertAttributeValue(value pcommon.Value) interface{} {
 	case pcommon.ValueTypeMap:
 		values := map[string]interface{}{}
 		value.MapVal().Range(func(k string, v pcommon.Value) bool {
-			values[k] = convertAttributeValue(v)
+			values[k] = e.convertAttributeValue(v)
 			return true
 		})
 		return values
@@ -124,12 +141,13 @@ func convertAttributeValue(value pcommon.Value) interface{} {
 		arrayVal := value.SliceVal()
 		values := make([]interface{}, arrayVal.Len())
 		for i := 0; i < arrayVal.Len(); i++ {
-			values[i] = convertAttributeValue(arrayVal.At(i))
+			values[i] = e.convertAttributeValue(arrayVal.At(i))
 		}
 		return values
 	case pcommon.ValueTypeEmpty:
 		return nil
 	default:
+		e.logger.Debug("Unhandled value type", zap.String("type", value.Type().String()))
 		return value
 	}
 }
@@ -154,12 +172,12 @@ func (e *jsonlogexporter) ConvertLogRecordToJson(log plog.LogRecord, resource pc
 
 	// add resource attributes to each json log
 	resource.Attributes().Range(func(k string, v pcommon.Value) bool {
-		jsonLog[k] = convertAttributeValue(v)
+		jsonLog[k] = e.convertAttributeValue(v)
 		return true
 	})
 	// add log record attributes to each json log
 	log.Attributes().Range(func(k string, v pcommon.Value) bool {
-		jsonLog[k] = convertAttributeValue(v)
+		jsonLog[k] = e.convertAttributeValue(v)
 		return true
 	})
 
@@ -167,7 +185,7 @@ func (e *jsonlogexporter) ConvertLogRecordToJson(log plog.LogRecord, resource pc
 	case pcommon.ValueTypeString:
 		jsonLog["message"] = log.Body().StringVal()
 	case pcommon.ValueTypeMap:
-		bodyFieldsMap := convertAttributeValue(log.Body()).(map[string]interface{})
+		bodyFieldsMap := e.convertAttributeValue(log.Body()).(map[string]interface{})
 		for key, value := range bodyFieldsMap {
 			jsonLog[key] = value
 		}
