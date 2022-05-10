@@ -32,16 +32,33 @@ func TestLoadConfig(t *testing.T) {
 	factory := NewFactory()
 	factories.Exporters[typeStr] = factory
 	cfg, err := servicetest.LoadConfigAndValidate(filepath.Join("testdata", "config.yaml"), factories)
-	require.EqualError(t, err, "exporter \"file\" has invalid configuration: path must be non-empty")
+	require.NoError(t, err)
 	require.NotNil(t, cfg)
-
-	e0 := cfg.Exporters[config.NewComponentID(typeStr)]
-	assert.Equal(t, e0, factory.CreateDefaultConfig())
-
-	e1 := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
-	assert.Equal(t, e1,
+	// default
+	conf := cfg.Exporters[config.NewComponentID(typeStr)]
+	assert.Equal(t, conf, factory.CreateDefaultConfig())
+	// custom
+	conf = cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
+	assert.Equal(t, conf,
 		&Config{
 			ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
-			Token:            "./filename.json",
+			Token:            "logzioTESTtoken",
+			Region:           "eu",
+			CustomEndpoint:   "https://some-url.com:8888",
+			DrainInterval:    5,
+			QueueCapacity:    500,
+			QueueMaxLength:   500,
+		})
+	// part custom with partial default
+	conf = cfg.Exporters[config.NewComponentIDWithName(typeStr, "3")]
+	assert.Equal(t, conf,
+		&Config{
+			ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "3")),
+			Token:            "logzioTESTtoken",
+			Region:           "us",
+			CustomEndpoint:   "",
+			DrainInterval:    3,
+			QueueCapacity:    500,
+			QueueMaxLength:   500000,
 		})
 }

@@ -24,17 +24,6 @@ var (
 	spanAttributes      = map[string]interface{}{"span-attr": "span-attr-val"}
 )
 
-const (
-	TestLabelKey1       = "label-1"
-	TestLabelValue1     = "label-value-1"
-	TestLabelKey2       = "label-2"
-	TestLabelValue2     = "label-value-2"
-	TestLabelKey3       = "label-3"
-	TestLabelValue3     = "label-value-3"
-	TestAttachmentKey   = "exemplar-attachment"
-	TestAttachmentValue = "exemplar-attachment-value"
-)
-
 func initResourceAttributes1(dest pcommon.Map) {
 	pcommon.NewMapFromRaw(resourceAttributes1).CopyTo(dest)
 }

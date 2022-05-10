@@ -31,10 +31,7 @@ type Config struct {
 
 var _ config.Exporter = (*Config)(nil)
 
-//// Validate checks if the exporter configuration is valid
-//func (cfg *Config) Validate() error {
-//	if cfg.Token == "" {
-//		return errors.New("token must be non-empty")
-//	}
-//	return nil
-//}
+// Validate checks if the exporter configuration is valid
+func (cfg *Config) Validate() error {
+	return nil
+}

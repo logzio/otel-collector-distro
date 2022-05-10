@@ -32,7 +32,6 @@ func TestCreateDefaultConfig(t *testing.T) {
 	assert.NotNil(t, cfg, "failed to create default config")
 	assert.NoError(t, configtest.CheckConfigStruct(cfg))
 }
-
 func TestCreateLogsExporter(t *testing.T) {
 	factories, err := componenttest.NopFactories()
 	require.NoError(t, err)
@@ -47,6 +46,7 @@ func TestCreateLogsExporter(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, exporter)
 }
+
 func TestCreateDefaultLogsExporter(t *testing.T) {
 	cfg := createDefaultConfig()
 	exp, err := createLogsExporter(

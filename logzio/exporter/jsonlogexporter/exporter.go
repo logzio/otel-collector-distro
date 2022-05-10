@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/go-hclog"
+	"time"
 
 	sender "github.com/logzio/logzio-go"
 	"go.opentelemetry.io/collector/component"
@@ -63,6 +64,7 @@ func newJsonLogExporter(config *Config, params component.ExporterCreateSettings)
 		sender.SetCompress(true),
 		sender.SetlogCountLimit(config.QueueMaxLength),
 		sender.SetinMemoryCapacity(uint64(config.QueueCapacity)),
+		sender.SetDrainDuration(time.Second*time.Duration(config.DrainInterval)),
 	)
 	if err != nil {
 		return nil, err
@@ -212,7 +214,6 @@ func (e *jsonlogexporter) ConsumeLogs(_ context.Context, ld plog.Logs) error {
 			}
 		}
 	}
-	e.sender.Drain()
 	return nil
 }
 
