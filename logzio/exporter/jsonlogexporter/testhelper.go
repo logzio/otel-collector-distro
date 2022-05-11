@@ -1,30 +1,32 @@
-// Copyright The OpenTelemetry Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-package testdata
+package jsonlogexporter
 
 import (
-	"time"
-
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
+	"time"
 )
 
 var (
-	TestLogTime      = time.Now()
-	TestLogTimestamp = pcommon.NewTimestampFromTime(TestLogTime)
+	TestLogTime         = time.Now()
+	TestLogTimestamp    = pcommon.NewTimestampFromTime(TestLogTime)
+	resourceAttributes1 = map[string]interface{}{"resource-attr": "resource-attr-val-1"}
+	resourceAttributes2 = map[string]interface{}{"resource-attr": "resource-attr-val-2"}
+	spanEventAttributes = map[string]interface{}{"span-event-attr": "span-event-attr-val"}
+	spanLinkAttributes  = map[string]interface{}{"span-link-attr": "span-link-attr-val"}
+	spanAttributes      = map[string]interface{}{"span-attr": "span-attr-val"}
 )
+
+// Resource Attributes
+func initResourceAttributes1(dest pcommon.Map) {
+	pcommon.NewMapFromRaw(resourceAttributes1).CopyTo(dest)
+}
+
+// Resources
+func initResource1(r pcommon.Resource) {
+	initResourceAttributes1(r.Attributes())
+}
+
+// Logs
 
 func GenerateLogsOneEmptyResourceLogs() plog.Logs {
 	ld := plog.NewLogs()
@@ -45,19 +47,6 @@ func GenerateLogsOneEmptyLogRecord() plog.Logs {
 	return ld
 }
 
-func GenerateLogsOneLogRecordNoResource() plog.Logs {
-	ld := GenerateLogsOneEmptyResourceLogs()
-	rs0 := ld.ResourceLogs().At(0)
-	fillLogOne(rs0.ScopeLogs().AppendEmpty().LogRecords().AppendEmpty())
-	return ld
-}
-
-func GenerateLogsOneLogRecord() plog.Logs {
-	ld := GenerateLogsOneEmptyLogRecord()
-	fillLogOne(ld.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0))
-	return ld
-}
-
 func GenerateLogsTwoLogRecordsSameResource() plog.Logs {
 	ld := GenerateLogsOneEmptyLogRecord()
 	logs := ld.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords()
@@ -66,18 +55,17 @@ func GenerateLogsTwoLogRecordsSameResource() plog.Logs {
 	return ld
 }
 
-func GenerateLogsTwoLogRecordsSameResourceOneDifferent() plog.Logs {
-	ld := plog.NewLogs()
-	rl0 := ld.ResourceLogs().AppendEmpty()
-	initResource1(rl0.Resource())
-	logs := rl0.ScopeLogs().AppendEmpty().LogRecords()
-	fillLogOne(logs.AppendEmpty())
-	fillLogTwo(logs.AppendEmpty())
-	rl1 := ld.ResourceLogs().AppendEmpty()
-	initResource2(rl1.Resource())
-	fillLogThree(rl1.ScopeLogs().AppendEmpty().LogRecords().AppendEmpty())
-	return ld
+func GenerateLogRecordWithNestedBody() plog.LogRecord {
+	lr := plog.NewLogRecord()
+	fillLogOne(lr)
+	return lr
 }
+func GenerateLogRecordWithMultiTypeValues() plog.LogRecord {
+	lr := plog.NewLogRecord()
+	fillLogTwo(lr)
+	return lr
+}
+
 func fillLogOne(log plog.LogRecord) {
 	log.SetTimestamp(TestLogTimestamp)
 	log.SetDroppedAttributesCount(1)
@@ -88,7 +76,7 @@ func fillLogOne(log plog.LogRecord) {
 
 	attrs := log.Attributes()
 	attrs.InsertString("app", "server")
-	attrs.InsertInt("instance_num", 1)
+	attrs.InsertDouble("instance_num", 1)
 
 	// nested body map
 	attVal := pcommon.NewValueMap()
@@ -114,18 +102,10 @@ func fillLogTwo(log plog.LogRecord) {
 
 	attrs := log.Attributes()
 	attrs.InsertString("customer", "acme")
+	attrs.InsertDouble("number", 64)
+	attrs.InsertBool("bool", true)
 	attrs.InsertString("env", "dev")
-
 	log.Body().SetStringVal("something happened")
-}
-
-func fillLogThree(log plog.LogRecord) {
-	log.SetTimestamp(TestLogTimestamp)
-	log.SetDroppedAttributesCount(1)
-	log.SetSeverityNumber(plog.SeverityNumberWARN)
-	log.SetSeverityText("Warning")
-
-	log.Body().SetStringVal("something else happened")
 }
 
 func GenerateLogsManyLogRecordsSameResource(count int) plog.Logs {

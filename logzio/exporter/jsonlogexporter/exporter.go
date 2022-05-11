@@ -24,7 +24,6 @@ import (
 
 	sender "github.com/logzio/logzio-go"
 	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	_ "go.opentelemetry.io/collector/model/otlp"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -46,16 +45,22 @@ type jsonlogexporter struct {
 }
 
 func newJsonLogExporter(config *Config, params component.ExporterCreateSettings) (*jsonlogexporter, error) {
+	if config == nil {
+		return nil, errors.New("exporter config can't be null")
+	}
 	// create logger
 	logger := hclog2ZapLogger{
 		Zap:  params.Logger,
 		name: loggerName,
 	}
 	// generate url based on input
-	url := getListenerUrl(config.Region, &logger)
-	if config.CustomEndpoint != "" {
-		url = config.CustomEndpoint
+	url := config.CustomEndpoint
+	if url == "" {
+		url = getListenerUrl(config.Region, &logger)
+	} else {
+		logger.Info(fmt.Sprintf("Setting url to %s", url))
 	}
+
 	sender, err := sender.New(
 		config.Token,
 		sender.SetDebug(os.Stderr),
@@ -66,12 +71,6 @@ func newJsonLogExporter(config *Config, params component.ExporterCreateSettings)
 		sender.SetinMemoryCapacity(uint64(config.QueueCapacity)),
 		sender.SetDrainDuration(time.Second*time.Duration(config.DrainInterval)),
 	)
-	if err != nil {
-		return nil, err
-	}
-	if config == nil {
-		return nil, errors.New("exporter config can't be null")
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -154,12 +153,8 @@ func (e *jsonlogexporter) convertAttributeValue(value pcommon.Value) interface{}
 	}
 }
 
-func (e *jsonlogexporter) Capabilities() consumer.Capabilities {
-	return consumer.Capabilities{MutatesData: false}
-}
-
 // ConvertLogRecordToJson Takes `plog.LogRecord` and `pcommon.Resource` input, outputs byte array that represents the log record as json string
-func (e *jsonlogexporter) ConvertLogRecordToJson(log plog.LogRecord, resource pcommon.Resource) ([]byte, error) {
+func (e *jsonlogexporter) ConvertLogRecordToJson(log plog.LogRecord, resource pcommon.Resource) map[string]interface{} {
 	jsonLog := map[string]interface{}{}
 	if spanID := log.SpanID().HexString(); spanID != "" {
 		jsonLog["spanID"] = spanID
@@ -170,7 +165,8 @@ func (e *jsonlogexporter) ConvertLogRecordToJson(log plog.LogRecord, resource pc
 	if log.SeverityText() != "" {
 		jsonLog["level"] = log.SeverityText()
 	}
-	jsonLog["@timestamp"] = log.Timestamp().AsTime()
+	fmt.Sprintf(log.Timestamp().String())
+	//jsonLog["@timestamp"] = log.Timestamp().AsTime()
 
 	// add resource attributes to each json log
 	resource.Attributes().Range(func(k string, v pcommon.Value) bool {
@@ -192,9 +188,7 @@ func (e *jsonlogexporter) ConvertLogRecordToJson(log plog.LogRecord, resource pc
 			jsonLog[key] = value
 		}
 	}
-	buf, err := json.Marshal(jsonLog)
-	fmt.Printf("json data: %s\n", buf)
-	return buf, err
+	return jsonLog
 }
 
 func (e *jsonlogexporter) ConsumeLogs(_ context.Context, ld plog.Logs) error {
@@ -206,7 +200,8 @@ func (e *jsonlogexporter) ConsumeLogs(_ context.Context, ld plog.Logs) error {
 			logRecords := scopeLogs.At(j).LogRecords()
 			for k := 0; k < logRecords.Len(); k++ {
 				log := logRecords.At(k)
-				buf, err := e.ConvertLogRecordToJson(log, resource)
+				jsonLog := e.ConvertLogRecordToJson(log, resource)
+				buf, err := json.Marshal(jsonLog)
 				if err != nil {
 					return err
 				}

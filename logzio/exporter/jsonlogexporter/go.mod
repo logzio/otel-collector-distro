@@ -48,7 +48,5 @@ require (
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	go.uber.org/zap v1.21.0
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
-	internal/core v0.0.0-00010101000000-000000000000
 )
 
-replace internal/core => ../../../internal/core
