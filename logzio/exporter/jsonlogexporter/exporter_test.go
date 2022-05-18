@@ -31,6 +31,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -73,6 +74,7 @@ func TestNullTracesExporterConfig(tester *testing.T) {
 }
 
 func TestConsumeLogs(t *testing.T) {
+	var lock sync.Mutex
 	var recordedRequests []byte
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		recordedRequests, _ = ioutil.ReadAll(req.Body)
@@ -91,7 +93,9 @@ func TestConsumeLogs(t *testing.T) {
 	var log map[string]interface{}
 	ld := GenerateLogsManyLogRecordsSameResource(5)
 	ld.ResourceLogs().At(0).Resource().Attributes().InsertString("att", "test_att")
+	lock.Lock()
 	exportLogs(ld, t, &cfg)
+	lock.Unlock()
 	decoded, _ := gUnzipData(recordedRequests)
 	requests := strings.Split(string(decoded), "\n")
 	require.Equal(t, 6, len(requests))

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/go-hclog"
+	"strings"
 	"time"
 
 	sender "github.com/logzio/logzio-go"
@@ -29,12 +30,26 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.uber.org/zap"
-	"os"
 )
 
 const (
 	loggerName = "json-log-exporter"
 )
+
+type loggerWriter struct {
+	logger hclog.Logger
+}
+
+//this is to convert between jaeger log messages and logzioSender log messages
+func (writer *loggerWriter) Write(msgBytes []byte) (n int, err error) {
+	msgString := string(msgBytes)
+	if strings.Contains(strings.ToLower(msgString), "error") {
+		writer.logger.Error(msgString)
+	} else {
+		writer.logger.Debug(msgString)
+	}
+	return len(msgBytes), nil
+}
 
 // jsonlogexporter is the implementation of file exporter that writes telemetry data to a file
 // in Protobuf-JSON format.
@@ -63,8 +78,8 @@ func newJsonLogExporter(config *Config, params component.ExporterCreateSettings)
 
 	sender, err := sender.New(
 		config.Token,
-		sender.SetDebug(os.Stderr),
 		sender.SetUrl(url),
+		sender.SetDebug(&loggerWriter{logger: &logger}),
 		sender.SetInMemoryQueue(true),
 		sender.SetCompress(true),
 		sender.SetlogCountLimit(config.QueueMaxLength),
