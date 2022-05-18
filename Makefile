@@ -36,7 +36,7 @@ _buildx:
 build-container-dev:
 	$(MAKE) _build \
 		IMG="$(REPO_URL)-dev" \
-		DOCKERFILE="Dockerfile_dev" \
+		DOCKERFILE="Dockerfile.dev" \
 		TAG="$(BUILD_TAG)"
 
 .PHONY: build-container-arm64
