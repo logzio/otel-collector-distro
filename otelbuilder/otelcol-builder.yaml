@@ -20,6 +20,7 @@ exporters:
     gomod: go.opentelemetry.io/collector v0.50.0
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/fileexporter v0.50.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.50.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.50.0"
 processors:
   # Upstream processors
   - import: go.opentelemetry.io/collector/processor/batchprocessor
@@ -38,6 +39,7 @@ processors:
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanmetricsprocessor v0.50.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanprocessor v0.50.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor v0.50.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor v0.50.0"
 receivers:
   # Upstream receivers
   - import: go.opentelemetry.io/collector/receiver/otlpreceiver
