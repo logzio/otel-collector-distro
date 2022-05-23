@@ -16,6 +16,13 @@ package logzioexporter // import "github.com/open-telemetry/opentelemetry-collec
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	//"github.com/docker/docker/daemon/logger"
+	"go.opentelemetry.io/collector/config/configcompression"
+	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
+	"time"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config"
@@ -33,22 +40,61 @@ func NewFactory() component.ExporterFactory {
 
 func createDefaultConfig() config.Exporter {
 	return &Config{
-		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
 		Region:           "",
 		TracesToken:      "",
-		MetricsToken:     "",
-		DrainInterval:    3,
-		QueueMaxLength:   500000,
-		QueueCapacity:    20 * 1024 * 1024,
+		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
+		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
+		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
+		HTTPClientSettings: confighttp.HTTPClientSettings{
+			Endpoint: "",
+			Timeout:  30 * time.Second,
+			Headers:  map[string]string{},
+			// Default to gzip compression
+			Compression: configcompression.Gzip,
+			// We almost read 0 bytes, so no need to tune ReadBufferSize.
+			WriteBufferSize: 512 * 1024,
+		},
+	}
+}
+
+func getListenerUrl(region string) string {
+	var url string
+	switch region {
+	case "us":
+		url = "https://listener.logz.io:8071"
+	case "ca":
+		url = "https://listener-ca.logz.io:8071"
+	case "eu":
+		url = "https://listener-eu.logz.io:8071"
+	case "uk":
+		url = "https://listener-uk.logz.io:8071"
+	case "au":
+		url = "https://listener-au.logz.io:8071"
+	case "nl":
+		url = "https://listener-nl.logz.io:8071"
+	case "wa":
+		url = "https://listener-wa.logz.io:8071"
+	default:
+		url = "https://listener.logz.io:8071"
+	}
+	return url
+}
+
+func generateEndpoint(cfg *Config, region string) (string, error) {
+	defaultUrl := fmt.Sprintf("%s/?token=%s", getListenerUrl(""), cfg.TracesToken)
+	switch {
+	case region != "":
+		return fmt.Sprintf("%s/?token=%s", getListenerUrl(region), cfg.TracesToken), nil
+	case cfg.Endpoint != "":
+		return cfg.Endpoint, nil
+	case cfg.Endpoint == "" && region == "":
+		return defaultUrl, errors.New("failed to generate endpoint, Endpoint or Region must be set")
+	default:
+		return defaultUrl, nil
 	}
 }
 
 func createTracesExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.TracesExporter, error) {
 	config := cfg.(*Config)
 	return newLogzioTracesExporter(config, params)
-}
-
-func createMetricsExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.MetricsExporter, error) {
-	config := cfg.(*Config)
-	return newLogzioMetricsExporter(config, params)
 }

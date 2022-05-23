@@ -15,8 +15,12 @@
 package logzioexporter
 
 import (
+	"go.opentelemetry.io/collector/config/configcompression"
+	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,12 +45,8 @@ func TestLoadConfig(t *testing.T) {
 	cfgExp := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
 	assert.Equal(t, &Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
-		TracesToken:      "logzioTESTtoken",
+		TracesToken:      "token",
 		Region:           "eu",
-		CustomEndpoint:   "https://some-url.com:8888",
-		DrainInterval:    5,
-		QueueCapacity:    500,
-		QueueMaxLength:   500,
 	}, cfgExp)
 }
 
@@ -64,11 +64,20 @@ func TestDefaultLoadConfig(t *testing.T) {
 	assert.Equal(t, 2, len(cfg.Exporters))
 
 	cfgExp := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
-	assert.Equal(t, &Config{
+	expected := &Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
 		TracesToken:      "logzioTESTtoken",
-		DrainInterval:    3,
-		QueueCapacity:    20 * 1024 * 1024,
-		QueueMaxLength:   500000,
-	}, cfgExp)
+	}
+	expected.RetrySettings = exporterhelper.NewDefaultRetrySettings()
+	expected.QueueSettings = exporterhelper.NewDefaultQueueSettings()
+	expected.HTTPClientSettings = confighttp.HTTPClientSettings{
+		Endpoint: "",
+		Timeout:  30 * time.Second,
+		Headers:  map[string]string{},
+		// Default to gzip compression
+		Compression: configcompression.Gzip,
+		// We almost read 0 bytes, so no need to tune ReadBufferSize.
+		WriteBufferSize: 512 * 1024,
+	}
+	assert.Equal(t, expected, cfgExp)
 }
