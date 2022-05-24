@@ -1,4 +1,4 @@
-package logzioexporter
+package objects
 
 import (
 	"encoding/json"

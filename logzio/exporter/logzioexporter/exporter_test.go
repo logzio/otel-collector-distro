@@ -18,8 +18,12 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"fmt"
+	"go.opentelemetry.io/collector/config/configcompression"
+	"go.opentelemetry.io/collector/config/confighttp"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,6 +40,51 @@ const (
 	testOperation = "testOperation"
 )
 
+func newTestTracesWithAttributes() ptrace.Traces {
+	td := ptrace.NewTraces()
+	for i := 0; i < 10; i++ {
+		s := td.ResourceSpans().AppendEmpty().ScopeSpans().AppendEmpty().Spans().AppendEmpty()
+		s.SetName(fmt.Sprintf("%s-%d", testOperation, i))
+		s.SetTraceID(pcommon.NewTraceID([16]byte{byte(i), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}))
+		s.SetSpanID(pcommon.NewSpanID([8]byte{byte(i), 0, 0, 0, 0, 0, 0, 2}))
+		for j := 0; j < 5; j++ {
+			s.Attributes().Insert(fmt.Sprintf("k%d", j), pcommon.NewValueString(fmt.Sprintf("v%d", j)))
+		}
+		s.SetKind(ptrace.SpanKindServer)
+	}
+	return td
+}
+
+func TestLogzioConverter(t *testing.T) {
+	cfg := Config{
+		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
+		TracesToken:      "",
+		Region:           "us",
+		HTTPClientSettings: confighttp.HTTPClientSettings{
+			Endpoint: "",
+			Timeout:  30 * time.Second,
+			Headers:  map[string]string{},
+			// Default to gzip compression
+			Compression: configcompression.Gzip,
+			// We almost read 0 bytes, so no need to tune ReadBufferSize.
+			WriteBufferSize: 512 * 1024,
+		},
+	}
+	td := newTestTracesWithAttributes()
+	params := componenttest.NewNopExporterCreateSettings()
+	exporter, err := CreateTracesExporter(context.Background(), params, &cfg)
+	err = exporter.Start(context.Background(), componenttest.NewNopHost())
+	if err != nil {
+		return
+	}
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	err = exporter.ConsumeTraces(ctx, td)
+	require.NoError(t, err)
+	err = exporter.Shutdown(ctx)
+	require.NoError(t, err)
+}
 func newTestTraces() ptrace.Traces {
 	td := ptrace.NewTraces()
 	s := td.ResourceSpans().AppendEmpty().ScopeSpans().AppendEmpty().Spans().AppendEmpty()
@@ -48,7 +97,7 @@ func newTestTraces() ptrace.Traces {
 
 func testTracesExporter(td ptrace.Traces, t *testing.T, cfg *Config) {
 	params := componenttest.NewNopExporterCreateSettings()
-	exporter, err := createTracesExporter(context.Background(), params, cfg)
+	exporter, err := CreateTracesExporter(context.Background(), params, cfg)
 	exporter.Start(context.Background(), componenttest.NewNopHost())
 	require.NoError(t, err)
 
@@ -76,7 +125,7 @@ func TestNullTokenConfig(tester *testing.T) {
 		Region: "eu",
 	}
 	params := componenttest.NewNopExporterCreateSettings()
-	_, err := createTracesExporter(context.Background(), params, &cfg)
+	_, err := CreateTracesExporter(context.Background(), params, &cfg)
 	assert.Error(tester, err, "Empty token should produce error")
 }
 

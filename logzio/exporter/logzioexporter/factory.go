@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	//"github.com/docker/docker/daemon/logger"
 	"go.opentelemetry.io/collector/config/configcompression"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -35,7 +34,7 @@ func NewFactory() component.ExporterFactory {
 	return component.NewExporterFactory(
 		typeStr,
 		createDefaultConfig,
-		component.WithTracesExporter(createTracesExporter))
+		component.WithTracesExporter(CreateTracesExporter))
 }
 
 func createDefaultConfig() config.Exporter {
@@ -94,7 +93,7 @@ func generateEndpoint(cfg *Config, region string) (string, error) {
 	}
 }
 
-func createTracesExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.TracesExporter, error) {
+func CreateTracesExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.TracesExporter, error) {
 	config := cfg.(*Config)
 	return newLogzioTracesExporter(config, params)
 }

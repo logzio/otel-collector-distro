@@ -17,10 +17,14 @@ package logzioexporter // Package logzioexporter import "github.com/open-telemet
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
+	"github.com/jaegertracing/jaeger/model"
+	"github.com/jaegertracing/jaeger/pkg/cache"
+	"github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter/objects"
 	"go.opentelemetry.io/collector/consumer/consumererror"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"io"
@@ -43,10 +47,11 @@ const (
 
 // logzioExporter implements an OpenTelemetry trace exporter that exports all spans to Logz.io
 type logzioExporter struct {
-	config   *Config
-	client   *http.Client
-	logger   hclog.Logger
-	settings component.TelemetrySettings
+	config       *Config
+	client       *http.Client
+	logger       hclog.Logger
+	settings     component.TelemetrySettings
+	serviceCache cache.Cache
 }
 
 func newLogzioExporter(cfg *Config, params component.ExporterCreateSettings) (*logzioExporter, error) {
@@ -61,6 +66,12 @@ func newLogzioExporter(cfg *Config, params component.ExporterCreateSettings) (*l
 		config:   cfg,
 		logger:   &logger,
 		settings: params.TelemetrySettings,
+		serviceCache: cache.NewLRUWithOptions(
+			100000,
+			&cache.Options{
+				TTL: 24 * time.Hour,
+			},
+		),
 	}, nil
 }
 
@@ -96,6 +107,7 @@ func (exporter *logzioExporter) start(_ context.Context, host component.Host) er
 }
 
 func (exporter *logzioExporter) pushTraceData(ctx context.Context, traces ptrace.Traces) error {
+	// a buffer to store logzio span and services bytes
 	var dataBuffer bytes.Buffer
 	batches, err := jaeger.ProtoFromTraces(traces)
 	if err != nil {
@@ -104,20 +116,44 @@ func (exporter *logzioExporter) pushTraceData(ctx context.Context, traces ptrace
 	for _, batch := range batches {
 		for _, span := range batch.Spans {
 			span.Process = batch.Process
-			logzioSpan, err := TransformToLogzioSpanBytes(span)
+			span.Tags = exporter.dropEmptyTags(span.Tags)
+			span.Process.Tags = exporter.dropEmptyTags(span.Process.Tags)
+			logzioSpan, err := objects.TransformToLogzioSpanBytes(span)
 			dataBuffer.Write(append(logzioSpan, '\n'))
 			if err != nil {
 				return err
 			}
+			// Create logzio service
+			// if the service hash already exists in cache: skip
+			// else: store service in cache and send to logz.io
+			// this prevents sending duplicate logzio services
+			service := objects.NewLogzioService(span)
+			serviceHash, err := service.HashCode()
+			if exporter.serviceCache.Get(serviceHash) == nil || err != nil {
+				if err == nil {
+					exporter.serviceCache.Put(serviceHash, serviceHash)
+				}
+				serviceBytes, err := json.Marshal(service)
+				if err != nil {
+					return err
+				}
+				dataBuffer.Write(append(serviceBytes, '\n'))
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 	err = exporter.export(ctx, exporter.config.Endpoint, dataBuffer.Bytes())
+	// reset the data buffer after each export to prevent duplicated data
 	dataBuffer.Reset()
 	return err
 }
 
+// export is similar to otlphttp export method with changes in log messages + Permanent error for `StatusUnauthorized` and `StatusForbidden`
+// https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/otlphttpexporter/otlp.go#L127
 func (exporter *logzioExporter) export(ctx context.Context, url string, request []byte) error {
-	exporter.logger.Debug("Preparing to make HTTP request")
+	exporter.logger.Debug(fmt.Sprintf("Preparing to make HTTP request with %d bytes", len(request)))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(request))
 	if err != nil {
 		return consumererror.NewPermanent(err)
@@ -134,10 +170,9 @@ func (exporter *logzioExporter) export(ctx context.Context, url string, request 
 		io.CopyN(ioutil.Discard, resp.Body, maxHTTPResponseReadBytes) // nolint:errcheck
 		resp.Body.Close()
 	}()
-
+	exporter.logger.Debug(fmt.Sprintf("Response status code: %d", resp.StatusCode))
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 		// Request is successful.
-		exporter.logger.Debug("Request is successful")
 		return nil
 	}
 	respStatus := readResponse(resp)
@@ -202,4 +237,15 @@ func readResponse(resp *http.Response) *status.Status {
 	}
 
 	return respStatus
+}
+
+func (exporter *logzioExporter) dropEmptyTags(tags []model.KeyValue) []model.KeyValue {
+	for i, tag := range tags {
+		if tag.Key == "" {
+			tags[i] = tags[len(tags)-1] // Copy last element to index i.
+			tags = tags[:len(tags)-1]   // Truncate slice.
+			exporter.logger.Warn(fmt.Sprintf("Found tag empty key: %s, dropping tag..", tag.String()))
+		}
+	}
+	return tags
 }
