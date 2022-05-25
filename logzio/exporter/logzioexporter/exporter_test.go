@@ -104,7 +104,7 @@ func TestNullTokenConfig(tester *testing.T) {
 func TestEmptyNode(tester *testing.T) {
 	cfg := Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
-		TracesToken:      "test",
+		Token:            "test",
 		Region:           "eu",
 	}
 	testTracesExporter(ptrace.NewTraces(), tester, &cfg)
@@ -154,7 +154,7 @@ func TestPushTraceData(tester *testing.T) {
 	}))
 	cfg := Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
-		TracesToken:      "",
+		Token:            "",
 		Region:           "us",
 	}
 	defer server.Close()

@@ -45,7 +45,7 @@ func TestLoadConfig(t *testing.T) {
 	cfgExp := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
 	expected := &Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
-		TracesToken:      "token",
+		Token:            "token",
 		Region:           "eu",
 	}
 	expected.RetrySettings = exporterhelper.NewDefaultRetrySettings()
@@ -80,7 +80,7 @@ func TestDefaultLoadConfig(t *testing.T) {
 	cfgExp := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
 	expected := &Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
-		TracesToken:      "logzioTESTtoken",
+		Token:            "logzioTESTtoken",
 	}
 	expected.RetrySettings = exporterhelper.NewDefaultRetrySettings()
 	expected.QueueSettings = exporterhelper.NewDefaultQueueSettings()

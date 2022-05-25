@@ -28,12 +28,12 @@ type Config struct {
 	confighttp.HTTPClientSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
 	exporterhelper.QueueSettings  `mapstructure:"sending_queue"`
 	exporterhelper.RetrySettings  `mapstructure:"retry_on_failure"`
-	TracesToken                   string `mapstructure:"account_token"` // Your Logz.io Account Token, can be found at https://app.logz.io/#/dashboard/settings/general
+	Token                         string `mapstructure:"account_token"` // Your Logz.io Account Token, can be found at https://app.logz.io/#/dashboard/settings/general
 	Region                        string `mapstructure:"region"`        // Your Logz.io 2-letter region code, can be found at https://docs.logz.io/user-guide/accounts/account-region.html#available-regions
 }
 
 func (c *Config) Validate() error {
-	if c.TracesToken == "" {
+	if c.Token == "" {
 		return errors.New("`account_token` not specified")
 	}
 	return nil

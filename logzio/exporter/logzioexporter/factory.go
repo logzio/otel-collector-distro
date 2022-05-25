@@ -42,7 +42,7 @@ func NewFactory() component.ExporterFactory {
 func createDefaultConfig() config.Exporter {
 	return &Config{
 		Region:           "",
-		TracesToken:      "",
+		Token:            "",
 		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
 		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
 		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
@@ -82,10 +82,10 @@ func getListenerUrl(region string) string {
 }
 
 func generateEndpoint(cfg *Config, region string) (string, error) {
-	defaultUrl := fmt.Sprintf("%s/?token=%s", getListenerUrl(""), cfg.TracesToken)
+	defaultUrl := fmt.Sprintf("%s/?token=%s", getListenerUrl(""), cfg.Token)
 	switch {
 	case region != "":
-		return fmt.Sprintf("%s/?token=%s", getListenerUrl(region), cfg.TracesToken), nil
+		return fmt.Sprintf("%s/?token=%s", getListenerUrl(region), cfg.Token), nil
 	case cfg.Endpoint != "":
 		return cfg.Endpoint, nil
 	case cfg.Endpoint == "" && region == "":
