@@ -81,14 +81,14 @@ func getListenerUrl(region string) string {
 	return url
 }
 
-func generateEndpoint(cfg *Config, region string) (string, error) {
+func generateEndpoint(cfg *Config) (string, error) {
 	defaultUrl := fmt.Sprintf("%s/?token=%s", getListenerUrl(""), cfg.Token)
 	switch {
-	case region != "":
-		return fmt.Sprintf("%s/?token=%s", getListenerUrl(region), cfg.Token), nil
 	case cfg.Endpoint != "":
 		return cfg.Endpoint, nil
-	case cfg.Endpoint == "" && region == "":
+	case cfg.Region != "":
+		return fmt.Sprintf("%s/?token=%s", getListenerUrl(cfg.Region), cfg.Token), nil
+	case cfg.Endpoint == "" && cfg.Region == "":
 		return defaultUrl, errors.New("failed to generate endpoint, Endpoint or Region must be set")
 	default:
 		return defaultUrl, nil

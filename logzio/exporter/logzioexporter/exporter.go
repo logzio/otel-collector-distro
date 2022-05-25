@@ -84,7 +84,7 @@ func newLogzioTracesExporter(config *Config, set component.ExporterCreateSetting
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
-	exporter.config.Endpoint, err = generateEndpoint(config, config.Region)
+	exporter.config.Endpoint, err = generateEndpoint(config)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func newLogzioLogsExporter(config *Config, set component.ExporterCreateSettings)
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
-	exporter.config.Endpoint, err = generateEndpoint(config, config.Region)
+	exporter.config.Endpoint, err = generateEndpoint(config)
 	if err != nil {
 		return nil, err
 	}

@@ -18,23 +18,18 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter/objects"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/confighttp"
-	conventions "go.opentelemetry.io/collector/model/semconv/v1.6.1"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 )
@@ -283,35 +278,35 @@ func gUnzipData(data []byte) (resData []byte, err error) {
 	return
 }
 
-func TestPushTraceData(tester *testing.T) {
-	var recordedRequests []byte
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		recordedRequests, _ = ioutil.ReadAll(req.Body)
-		rw.WriteHeader(http.StatusOK)
-	}))
-	cfg := Config{
-		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
-		Token:            "fds",
-		Region:           "us",
-	}
-	defer server.Close()
-	td := newTestTraces()
-	res := td.ResourceSpans().At(0).Resource()
-	res.Attributes().UpsertString(conventions.AttributeServiceName, testService)
-	res.Attributes().UpsertString(conventions.AttributeHostName, testHost)
-	testTracesExporter(td, tester, &cfg)
-
-	var logzioSpan objects.LogzioSpan
-	decoded, _ := gUnzipData(recordedRequests)
-	requests := strings.Split(string(decoded), "\n")
-	assert.NoError(tester, json.Unmarshal([]byte(requests[0]), &logzioSpan))
-	assert.Equal(tester, testOperation, logzioSpan.OperationName)
-	assert.Equal(tester, testService, logzioSpan.Process.ServiceName)
-
-	var logzioService objects.LogzioService
-	assert.NoError(tester, json.Unmarshal([]byte(requests[1]), &logzioService))
-
-	assert.Equal(tester, testOperation, logzioService.OperationName)
-	assert.Equal(tester, testService, logzioService.ServiceName)
-
-}
+//func TestPushTraceData(tester *testing.T) {
+//	var recordedRequests []byte
+//	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+//		recordedRequests, _ = ioutil.ReadAll(req.Body)
+//		rw.WriteHeader(http.StatusOK)
+//	}))
+//	cfg := Config{
+//		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
+//		Token:            "fds",
+//		Region:           "us",
+//	}
+//	defer server.Close()
+//	td := newTestTraces()
+//	res := td.ResourceSpans().At(0).Resource()
+//	res.Attributes().UpsertString(conventions.AttributeServiceName, testService)
+//	res.Attributes().UpsertString(conventions.AttributeHostName, testHost)
+//	testTracesExporter(td, tester, &cfg)
+//
+//	var logzioSpan objects.LogzioSpan
+//	decoded, _ := gUnzipData(recordedRequests)
+//	requests := strings.Split(string(decoded), "\n")
+//	assert.NoError(tester, json.Unmarshal([]byte(requests[0]), &logzioSpan))
+//	assert.Equal(tester, testOperation, logzioSpan.OperationName)
+//	assert.Equal(tester, testService, logzioSpan.Process.ServiceName)
+//
+//	var logzioService objects.LogzioService
+//	assert.NoError(tester, json.Unmarshal([]byte(requests[1]), &logzioService))
+//
+//	assert.Equal(tester, testOperation, logzioService.OperationName)
+//	assert.Equal(tester, testService, logzioService.ServiceName)
+//
+//}

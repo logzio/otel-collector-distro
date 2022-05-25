@@ -16,6 +16,7 @@ package logzioexporter
 
 import (
 	"context"
+	"go.opentelemetry.io/collector/config/confighttp"
 	"path/filepath"
 	"testing"
 
@@ -48,8 +49,35 @@ func TestCreateTracesExporter(t *testing.T) {
 	assert.NotNil(t, exporter)
 }
 
-func TestGetListenerUrl(t *testing.T) {
+func TestGenerateUrl(t *testing.T) {
+	type generateUrlTest struct {
+		endpoint string
+		region   string
+		expected string
+	}
+	var generateUrlTests = []generateUrlTest{
+		{"", "us", "https://listener.logz.io:8071/?token=token"},
+		{"", "", "https://listener.logz.io:8071/?token=token"},
+		{"https://doesnotexist.com", "", "https://doesnotexist.com"},
+		{"https://doesnotexist.com", "us", "https://doesnotexist.com"},
+		{"https://doesnotexist.com", "not-valid", "https://doesnotexist.com"},
+		{"", "not-valid", "https://listener.logz.io:8071/?token=token"},
+	}
+	for _, test := range generateUrlTests {
+		cfg := &Config{
+			Region:           test.region,
+			Token:            "token",
+			ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
+			HTTPClientSettings: confighttp.HTTPClientSettings{
+				Endpoint: test.endpoint,
+			},
+		}
+		output, _ := generateEndpoint(cfg)
+		require.Equal(t, test.expected, output)
+	}
+}
 
+func TestGetListenerUrl(t *testing.T) {
 	type getListenerUrlTest struct {
 		arg1     string
 		expected string
