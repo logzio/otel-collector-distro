@@ -150,6 +150,8 @@ func (exporter *logzioExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 		}
 	}
 	err := exporter.export(ctx, exporter.config.Endpoint, dataBuffer.Bytes())
+	// reset the data buffer after each export to prevent duplicated data
+	dataBuffer.Reset()
 	return err
 }
 
