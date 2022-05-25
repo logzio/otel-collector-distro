@@ -18,13 +18,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"encoding/json"
 	"fmt"
-	"go.opentelemetry.io/collector/config/configcompression"
-	"go.opentelemetry.io/collector/config/confighttp"
-	"io"
-	"testing"
-	"time"
-
+	"github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter/objects"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
@@ -32,6 +28,12 @@ import (
 	conventions "go.opentelemetry.io/collector/model/semconv/v1.6.1"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
 )
 
 const (
@@ -55,36 +57,6 @@ func newTestTracesWithAttributes() ptrace.Traces {
 	return td
 }
 
-func TestLogzioConverter(t *testing.T) {
-	cfg := Config{
-		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
-		TracesToken:      "",
-		Region:           "us",
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "",
-			Timeout:  30 * time.Second,
-			Headers:  map[string]string{},
-			// Default to gzip compression
-			Compression: configcompression.Gzip,
-			// We almost read 0 bytes, so no need to tune ReadBufferSize.
-			WriteBufferSize: 512 * 1024,
-		},
-	}
-	td := newTestTracesWithAttributes()
-	params := componenttest.NewNopExporterCreateSettings()
-	exporter, err := CreateTracesExporter(context.Background(), params, &cfg)
-	err = exporter.Start(context.Background(), componenttest.NewNopHost())
-	if err != nil {
-		return
-	}
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	err = exporter.ConsumeTraces(ctx, td)
-	require.NoError(t, err)
-	err = exporter.Shutdown(ctx)
-	require.NoError(t, err)
-}
 func newTestTraces() ptrace.Traces {
 	td := ptrace.NewTraces()
 	s := td.ResourceSpans().AppendEmpty().ScopeSpans().AppendEmpty().Spans().AppendEmpty()
@@ -98,7 +70,7 @@ func newTestTraces() ptrace.Traces {
 func testTracesExporter(td ptrace.Traces, t *testing.T, cfg *Config) {
 	params := componenttest.NewNopExporterCreateSettings()
 	exporter, err := CreateTracesExporter(context.Background(), params, cfg)
-	exporter.Start(context.Background(), componenttest.NewNopHost())
+	err = exporter.Start(context.Background(), componenttest.NewNopHost())
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -138,29 +110,6 @@ func TestEmptyNode(tester *testing.T) {
 	testTracesExporter(ptrace.NewTraces(), tester, &cfg)
 }
 
-//func startAndCleanup(t *testing.T, cmp component.Component) {
-//	require.NoError(t, cmp.Start(context.Background(), componenttest.NewNopHost()))
-//	t.Cleanup(func() {
-//		require.NoError(t, cmp.Shutdown(context.Background()))
-//	})
-//}
-
-//func TestWriteSpanError(tester *testing.T) {
-//	cfg := Config{
-//		TracesToken: "test",
-//		Region:      "eu",
-//	}
-//	params := componenttest.NewNopExporterCreateSettings()
-//	exporter, _ := newLogzioExporter(&cfg, params)
-//	oldFunc := exporter.WriteSpanFunc
-//	defer func() { exporter.WriteSpanFunc = oldFunc }()
-//	exporter.WriteSpanFunc = func(context.Context, *model.Span) error {
-//		return errors.New("fail")
-//	}
-//	err := exporter.pushTraceData(context.Background(), newTestTraces())
-//	assert.NoError(tester, err)
-//}
-
 //func TestConversionTraceError(tester *testing.T) {
 //	cfg := Config{
 //		TracesToken: "test",
@@ -198,35 +147,34 @@ func gUnzipData(data []byte) (resData []byte, err error) {
 }
 
 func TestPushTraceData(tester *testing.T) {
-	//var recordedRequests []byte
-	//server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-	//	recordedRequests, _ = ioutil.ReadAll(req.Body)
-	//	rw.WriteHeader(http.StatusOK)
-	//}))
+	var recordedRequests []byte
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		recordedRequests, _ = ioutil.ReadAll(req.Body)
+		rw.WriteHeader(http.StatusOK)
+	}))
 	cfg := Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
 		TracesToken:      "",
 		Region:           "us",
 	}
-	//defer server.Close()
-
+	defer server.Close()
 	td := newTestTraces()
 	res := td.ResourceSpans().At(0).Resource()
 	res.Attributes().UpsertString(conventions.AttributeServiceName, testService)
 	res.Attributes().UpsertString(conventions.AttributeHostName, testHost)
 	testTracesExporter(td, tester, &cfg)
 
-	//var logzioSpan objects.LogzioSpan
-	//decoded, _ := gUnzipData(recordedRequests)
-	//requests := strings.Split(string(decoded), "\n")
-	//assert.NoError(tester, json.Unmarshal([]byte(requests[0]), &logzioSpan))
-	//assert.Equal(tester, testOperation, logzioSpan.OperationName)
-	//assert.Equal(tester, testService, logzioSpan.Process.ServiceName)
-	//
-	//var logzioService objects.LogzioService
-	//assert.NoError(tester, json.Unmarshal([]byte(requests[1]), &logzioService))
-	//
-	//assert.Equal(tester, testOperation, logzioService.OperationName)
-	//assert.Equal(tester, testService, logzioService.ServiceName)
+	var logzioSpan objects.LogzioSpan
+	decoded, _ := gUnzipData(recordedRequests)
+	requests := strings.Split(string(decoded), "\n")
+	assert.NoError(tester, json.Unmarshal([]byte(requests[0]), &logzioSpan))
+	assert.Equal(tester, testOperation, logzioSpan.OperationName)
+	assert.Equal(tester, testService, logzioSpan.Process.ServiceName)
+
+	var logzioService objects.LogzioService
+	assert.NoError(tester, json.Unmarshal([]byte(requests[1]), &logzioService))
+
+	assert.Equal(tester, testOperation, logzioService.OperationName)
+	assert.Equal(tester, testService, logzioService.ServiceName)
 
 }

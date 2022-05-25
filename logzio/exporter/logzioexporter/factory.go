@@ -34,7 +34,9 @@ func NewFactory() component.ExporterFactory {
 	return component.NewExporterFactory(
 		typeStr,
 		createDefaultConfig,
-		component.WithTracesExporter(CreateTracesExporter))
+		component.WithTracesExporter(CreateTracesExporter),
+		component.WithLogsExporter(CreateLogsExporter))
+
 }
 
 func createDefaultConfig() config.Exporter {
@@ -94,6 +96,11 @@ func generateEndpoint(cfg *Config, region string) (string, error) {
 }
 
 func CreateTracesExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.TracesExporter, error) {
-	config := cfg.(*Config)
-	return newLogzioTracesExporter(config, params)
+	exporterConfig := cfg.(*Config)
+	return newLogzioTracesExporter(exporterConfig, params)
+}
+
+func CreateLogsExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.LogsExporter, error) {
+	exporterConfig := cfg.(*Config)
+	return newLogzioLogsExporter(exporterConfig, params)
 }

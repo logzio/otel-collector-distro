@@ -47,3 +47,26 @@ func TestCreateTracesExporter(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, exporter)
 }
+
+func TestGetListenerUrl(t *testing.T) {
+
+	type getListenerUrlTest struct {
+		arg1     string
+		expected string
+	}
+	var getListenerUrlTests = []getListenerUrlTest{
+		{"us", "https://listener.logz.io:8071"},
+		{"eu", "https://listener-eu.logz.io:8071"},
+		{"au", "https://listener-au.logz.io:8071"},
+		{"ca", "https://listener-ca.logz.io:8071"},
+		{"nl", "https://listener-nl.logz.io:8071"},
+		{"uk", "https://listener-uk.logz.io:8071"},
+		{"wa", "https://listener-wa.logz.io:8071"},
+		{"not-valid", "https://listener.logz.io:8071"},
+		{"", "https://listener.logz.io:8071"},
+	}
+	for _, test := range getListenerUrlTests {
+		output := getListenerUrl(test.arg1)
+		require.Equal(t, output, test.expected)
+	}
+}

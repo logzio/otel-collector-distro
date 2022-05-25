@@ -26,6 +26,7 @@ import (
 	"github.com/jaegertracing/jaeger/pkg/cache"
 	"github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter/objects"
 	"go.opentelemetry.io/collector/consumer/consumererror"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"io"
 	"io/ioutil"
@@ -96,6 +97,27 @@ func newLogzioTracesExporter(config *Config, set component.ExporterCreateSetting
 		exporterhelper.WithRetry(config.RetrySettings),
 	)
 }
+func newLogzioLogsExporter(config *Config, set component.ExporterCreateSettings) (component.LogsExporter, error) {
+	exporter, err := newLogzioExporter(config, set)
+	if err != nil {
+		return nil, err
+	}
+	if err := config.Validate(); err != nil {
+		return nil, err
+	}
+	exporter.config.Endpoint, err = generateEndpoint(config, config.Region)
+	if err != nil {
+		return nil, err
+	}
+	return exporterhelper.NewLogsExporter(
+		config,
+		set,
+		exporter.pushLogData,
+		exporterhelper.WithStart(exporter.start),
+		exporterhelper.WithQueue(config.QueueSettings),
+		exporterhelper.WithRetry(config.RetrySettings),
+	)
+}
 
 func (exporter *logzioExporter) start(_ context.Context, host component.Host) error {
 	client, err := exporter.config.HTTPClientSettings.ToClient(host.GetExtensions(), exporter.settings)
@@ -104,6 +126,31 @@ func (exporter *logzioExporter) start(_ context.Context, host component.Host) er
 	}
 	exporter.client = client
 	return nil
+}
+func (exporter *logzioExporter) pushLogData(ctx context.Context, ld plog.Logs) error {
+	var dataBuffer bytes.Buffer
+	resourceLogs := ld.ResourceLogs()
+	for i := 0; i < resourceLogs.Len(); i++ {
+		resource := resourceLogs.At(i).Resource()
+		scopeLogs := resourceLogs.At(i).ScopeLogs()
+		for j := 0; j < scopeLogs.Len(); j++ {
+			logRecords := scopeLogs.At(j).LogRecords()
+			for k := 0; k < logRecords.Len(); k++ {
+				log := logRecords.At(k)
+				jsonLog := objects.ConvertLogRecordToJson(log, resource, exporter.logger)
+				logzioLog, err := json.Marshal(jsonLog)
+				if err != nil {
+					return err
+				}
+				dataBuffer.Write(append(logzioLog, '\n'))
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	err := exporter.export(ctx, exporter.config.Endpoint, dataBuffer.Bytes())
+	return err
 }
 
 func (exporter *logzioExporter) pushTraceData(ctx context.Context, traces ptrace.Traces) error {
@@ -176,7 +223,6 @@ func (exporter *logzioExporter) export(ctx context.Context, url string, request 
 		return nil
 	}
 	respStatus := readResponse(resp)
-
 	// Format the error message. Use the status if it is present in the response.
 	var formattedErr error
 	if respStatus != nil {
@@ -207,7 +253,6 @@ func (exporter *logzioExporter) export(ctx context.Context, url string, request 
 	if resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		return consumererror.NewPermanent(formattedErr)
 	}
-
 	// All other errors are retryable, so don't wrap them in consumererror.NewPermanent().
 	return formattedErr
 }
