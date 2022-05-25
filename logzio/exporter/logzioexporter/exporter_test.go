@@ -25,8 +25,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config"
+	"go.opentelemetry.io/collector/config/confighttp"
 	conventions "go.opentelemetry.io/collector/model/semconv/v1.6.1"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"io"
 	"io/ioutil"
@@ -34,6 +36,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 const (
@@ -42,6 +45,123 @@ const (
 	testOperation = "testOperation"
 )
 
+var (
+	resourceAttributes1 = map[string]interface{}{"resource-attr": "resource-attr-val-1"}
+	TestLogTime         = time.Now()
+	TestLogTimestamp    = pcommon.NewTimestampFromTime(TestLogTime)
+)
+
+// Resource Attributes
+func initResourceAttributes1(dest pcommon.Map) {
+	pcommon.NewMapFromRaw(resourceAttributes1).CopyTo(dest)
+}
+
+// Resources
+func initResource1(r pcommon.Resource) {
+	initResourceAttributes1(r.Attributes())
+}
+
+// Logs
+
+func fillLogOne(log plog.LogRecord) {
+	log.SetTimestamp(TestLogTimestamp)
+	log.SetDroppedAttributesCount(1)
+	log.SetSeverityNumber(plog.SeverityNumberINFO)
+	log.SetSeverityText("Info")
+	log.SetSpanID(pcommon.NewSpanID([8]byte{0x01, 0x02, 0x04, 0x08}))
+	log.SetTraceID(pcommon.NewTraceID([16]byte{0x08, 0x04, 0x02, 0x01}))
+
+	attrs := log.Attributes()
+	attrs.InsertString("app", "server")
+	attrs.InsertDouble("instance_num", 1)
+
+	// nested body map
+	attVal := pcommon.NewValueMap()
+	attNestedVal := pcommon.NewValueMap()
+
+	attMap := attVal.MapVal()
+	attMap.InsertDouble("23", 45)
+	attMap.InsertString("foo", "bar")
+	attMap.InsertString("message", "hello there")
+	attNestedMap := attNestedVal.MapVal()
+	attNestedMap.InsertString("string", "v1")
+	attNestedMap.InsertDouble("number", 499)
+	attMap.Insert("nested", attNestedVal)
+	attVal.CopyTo(log.Body())
+
+}
+
+func fillLogTwo(log plog.LogRecord) {
+	log.SetTimestamp(TestLogTimestamp)
+	log.SetDroppedAttributesCount(1)
+	log.SetSeverityNumber(plog.SeverityNumberINFO)
+	log.SetSeverityText("Info")
+
+	attrs := log.Attributes()
+	attrs.InsertString("customer", "acme")
+	attrs.InsertDouble("number", 64)
+	attrs.InsertBool("bool", true)
+	attrs.InsertString("env", "dev")
+	log.Body().SetStringVal("something happened")
+}
+
+func GenerateLogsOneEmptyResourceLogs() plog.Logs {
+	ld := plog.NewLogs()
+	ld.ResourceLogs().AppendEmpty()
+	return ld
+}
+
+func GenerateLogsNoLogRecords() plog.Logs {
+	ld := GenerateLogsOneEmptyResourceLogs()
+	initResource1(ld.ResourceLogs().At(0).Resource())
+	return ld
+}
+
+func GenerateLogsOneEmptyLogRecord() plog.Logs {
+	ld := GenerateLogsNoLogRecords()
+	rs0 := ld.ResourceLogs().At(0)
+	rs0.ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
+	return ld
+}
+
+func GenerateLogsManyLogRecordsSameResource(count int) plog.Logs {
+	ld := GenerateLogsOneEmptyLogRecord()
+	logs := ld.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords()
+	logs.EnsureCapacity(count)
+	for i := 0; i < count; i++ {
+		var l plog.LogRecord
+		if i < logs.Len() {
+			l = logs.At(i)
+		} else {
+			l = logs.AppendEmpty()
+		}
+
+		if i%2 == 0 {
+			fillLogOne(l)
+		} else {
+			fillLogTwo(l)
+		}
+	}
+	return ld
+}
+
+func testLogsExporter(ld plog.Logs, t *testing.T, cfg *Config) error {
+	params := componenttest.NewNopExporterCreateSettings()
+	exporter, err := CreateLogsExporter(context.Background(), params, cfg)
+	err = exporter.Start(context.Background(), componenttest.NewNopHost())
+	require.NoError(t, err)
+	ctx := context.Background()
+	err = exporter.ConsumeLogs(ctx, ld)
+	if err != nil {
+		return err
+	}
+	require.NoError(t, err)
+	err = exporter.Shutdown(ctx)
+	require.NoError(t, err)
+	return nil
+}
+
+// Traces
 func newTestTracesWithAttributes() ptrace.Traces {
 	td := ptrace.NewTraces()
 	for i := 0; i < 10; i++ {
@@ -67,17 +187,59 @@ func newTestTraces() ptrace.Traces {
 	return td
 }
 
-func testTracesExporter(td ptrace.Traces, t *testing.T, cfg *Config) {
+func testTracesExporter(td ptrace.Traces, t *testing.T, cfg *Config) error {
 	params := componenttest.NewNopExporterCreateSettings()
 	exporter, err := CreateTracesExporter(context.Background(), params, cfg)
 	err = exporter.Start(context.Background(), componenttest.NewNopHost())
 	require.NoError(t, err)
-
 	ctx := context.Background()
 	err = exporter.ConsumeTraces(ctx, td)
+	if err != nil {
+		return err
+	}
 	require.NoError(t, err)
 	err = exporter.Shutdown(ctx)
 	require.NoError(t, err)
+	return nil
+}
+
+// Tests
+func TestExportErrors(tester *testing.T) {
+	type ExportErrorsTest struct {
+		status int
+	}
+	var ExportErrorsTests = []ExportErrorsTest{
+		{http.StatusUnauthorized},
+		{http.StatusBadGateway},
+		{http.StatusInternalServerError},
+		{http.StatusForbidden},
+		{http.StatusMethodNotAllowed},
+		{http.StatusNotFound},
+		{http.StatusBadRequest},
+	}
+	for _, test := range ExportErrorsTests {
+		server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.WriteHeader(test.status)
+		}))
+		cfg := &Config{
+			Region:           "",
+			Token:            "token",
+			ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
+			HTTPClientSettings: confighttp.HTTPClientSettings{
+				Endpoint: server.URL,
+			},
+		}
+		td := newTestTracesWithAttributes()
+		ld := GenerateLogsManyLogRecordsSameResource(10)
+		err := testTracesExporter(td, tester, cfg)
+		fmt.Println(err.Error())
+		require.Error(tester, err)
+		err = testLogsExporter(ld, tester, cfg)
+		fmt.Println(err.Error())
+		server.Close()
+		require.Error(tester, err)
+	}
+
 }
 
 func TestNullTracesExporterConfig(tester *testing.T) {
@@ -100,31 +262,6 @@ func TestNullTokenConfig(tester *testing.T) {
 	_, err := CreateTracesExporter(context.Background(), params, &cfg)
 	assert.Error(tester, err, "Empty token should produce error")
 }
-
-func TestEmptyNode(tester *testing.T) {
-	cfg := Config{
-		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
-		Token:            "test",
-		Region:           "eu",
-	}
-	testTracesExporter(ptrace.NewTraces(), tester, &cfg)
-}
-
-//func TestConversionTraceError(tester *testing.T) {
-//	cfg := Config{
-//		TracesToken: "test",
-//		Region:      "eu",
-//	}
-//	params := componenttest.NewNopExporterCreateSettings()
-//	exporter, _ := newLogzioExporter(&cfg, params)
-//	oldFunc := exporter.InternalTracesToJaegerTraces
-//	defer func() { exporter.InternalTracesToJaegerTraces = oldFunc }()
-//	exporter.InternalTracesToJaegerTraces = func(td ptrace.Traces) ([]*model.Batch, error) {
-//		return nil, errors.New("fail")
-//	}
-//	err := exporter.pushTraceData(context.Background(), newTestTraces())
-//	assert.Error(tester, err)
-//}
 
 func gUnzipData(data []byte) (resData []byte, err error) {
 	b := bytes.NewBuffer(data)
@@ -154,7 +291,7 @@ func TestPushTraceData(tester *testing.T) {
 	}))
 	cfg := Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentID(typeStr)),
-		Token:            "",
+		Token:            "fds",
 		Region:           "us",
 	}
 	defer server.Close()
