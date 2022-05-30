@@ -207,8 +207,7 @@ func (exporter *logzioExporter) export(ctx context.Context, url string, request 
 	if err != nil {
 		return consumererror.NewPermanent(err)
 	}
-	req.Header.Set("Content-Type", "text/plain")
-
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := exporter.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to make an HTTP request: %w", err)

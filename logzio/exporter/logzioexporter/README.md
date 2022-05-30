@@ -62,7 +62,7 @@ processors:
     timeout: 1s
 exporters:
   logzio/traces:
-    account_token: "LOGZIOlogsTOKEN"
+    account_token: "LOGZIOtraceTOKEN"
     region: "us"
 service:
   pipelines:
@@ -101,7 +101,7 @@ processors:
       hostname_sources: [ "os" ]
 exporters:
   logzio/logs:
-    account_token: "LOGZIOtraceTOKEN"
+    account_token: "LOGZIOlogsTOKEN"
     region: "us"
 service:
   pipelines:

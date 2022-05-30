@@ -9,7 +9,7 @@ jobs:
   test-exporters:
     strategy:
       matrix:
-        exporters: [logzioexporter,jsonlogexporter]
+        exporters: [logzioexporter]
     runs-on: [ubuntu-latest]
     steps:
       - name: test

@@ -19,7 +19,7 @@ processors:
       hostname_sources: [ "os" ]
 exporters:
   logzio/logs:
-    account_token: "LOGZIOtraceTOKEN"
+    account_token: "LOGZIOlogsTOKEN"
     region: "us"
 service:
   pipelines:
