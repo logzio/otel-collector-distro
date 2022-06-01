@@ -10,14 +10,14 @@ jobs:
     strategy:
       matrix:
         exporters: [logzioexporter]
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
       - name: test
         run: |
-          echo ${{ matrix.packages }}
+          echo ${{ matrix.exporters }}
       - uses: actions/checkout@v1
       - name: cd to dir
-        run: cd ./logzio/exporter/${{ matrix.packages }}
+        run: cd ./logzio/exporter/${{ matrix.exporters }}
       - name: go test
         run: go test
       - name: go back to root
