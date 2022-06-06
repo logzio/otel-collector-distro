@@ -28,13 +28,6 @@ Logz.io exporter is utilizing opentelemetry [exporter helper](https://github.com
         - default = 5000
 - `timeout`: Time to wait per individual attempt to send data to a backend. default = 5s
 
-#### Example:
-```yaml
-exporters:
-  logzio:
-    account_token: "LOGZIOtraceTOKEN"
-    region: "eu"
-```
 #### Tracing example:
 * We recommend using `batch` processor. Batching helps better compress the data and reduce the number of outgoing connections required to transmit the data.
 
@@ -142,7 +135,7 @@ receivers:
           - targets: [ "0.0.0.0:8889" ]
 
 exporters:
-  logzio:
+  logzio/traces:
     account_token: "LOGZIOtraceTOKEN"
     region: "us"
 
@@ -151,11 +144,17 @@ exporters:
     headers:
       Authorization: "Bearer LOGZIOprometheusTOKEN"
 
+processors:
+  batch:
+    send_batch_size: 10000
+    timeout: 1s
+    
 service:
   pipelines:
     traces:
       receivers: [jaeger]
-      exporters: [logzio]
+      processors: [batch]
+      exporters: [logzio/traces]
 
     metrics:
       receivers: [prometheus]
