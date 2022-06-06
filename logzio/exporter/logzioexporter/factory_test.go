@@ -62,6 +62,9 @@ func TestGenerateUrl(t *testing.T) {
 		{"https://doesnotexist.com", "us", "https://doesnotexist.com"},
 		{"https://doesnotexist.com", "not-valid", "https://doesnotexist.com"},
 		{"", "not-valid", "https://listener.logz.io:8071/?token=token"},
+		{"", "US", "https://listener.logz.io:8071/?token=token"},
+		{"", "Us", "https://listener.logz.io:8071/?token=token"},
+		{"", "EU", "https://listener-eu.logz.io:8071/?token=token"},
 	}
 	for _, test := range generateUrlTests {
 		cfg := &Config{
@@ -92,6 +95,8 @@ func TestGetListenerUrl(t *testing.T) {
 		{"wa", "https://listener-wa.logz.io:8071"},
 		{"not-valid", "https://listener.logz.io:8071"},
 		{"", "https://listener.logz.io:8071"},
+		{"US", "https://listener.logz.io:8071"},
+		{"Us", "https://listener.logz.io:8071"},
 	}
 	for _, test := range getListenerUrlTests {
 		output := getListenerUrl(test.arg1)

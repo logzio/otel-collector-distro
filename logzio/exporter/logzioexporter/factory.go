@@ -21,6 +21,7 @@ import (
 	"go.opentelemetry.io/collector/config/configcompression"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/collector/component"
@@ -60,7 +61,8 @@ func createDefaultConfig() config.Exporter {
 
 func getListenerUrl(region string) string {
 	var url string
-	switch region {
+	lowerCaseRegion := strings.ToLower(region)
+	switch lowerCaseRegion {
 	case "us":
 		url = "https://listener.logz.io:8071"
 	case "ca":
