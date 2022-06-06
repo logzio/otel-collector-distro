@@ -18,6 +18,7 @@ _install-bin:
 	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_$(PLATFORM)_amd64
 	@chmod +x $(BUILDER_BIN_NAME)
 
+# install otelcol builder
 .PHONY: install-builder
 install-builder:
 	@echo "Installing $(BUILDER_REPO)/cmd/builder@v$(BUILDER_VERSION)... (in $(BUILDER_BIN_PATH))"
@@ -81,6 +82,7 @@ test:
 lint: install-builder generate-sources
 	@$(MAKE) -C cmd lint
 
+# build collector distro binaries for all supported os arch combinations
 .PHONY: otelcol-logzio-all
 otelcol-logzio-all-sys: otelcol-logzio-darwin_amd64 otelcol-logzio-linux_amd64 otelcol-logzio-windows_amd64 otelcol-logzio-linux_arm64 otelcol-logzio-linux_arm
 

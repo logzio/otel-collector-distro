@@ -62,6 +62,7 @@ build-container:
 		DOCKERFILE="Dockerfile" \
 		TAG="$(BUILD_TAG)"
 
+# build and push multi arch docker images to logzio docker hub
 .PHONY: build-container-multi-platform
 build-container-multi-platform:
 	$(MAKE) build-container-amd64 \
@@ -73,7 +74,6 @@ multi-platform-manifest-create:
 	docker manifest create $(REPO_URL):$(BUILD_TAG) \
 		--amend $(REPO_URL):$(BUILD_TAG)-arm64 \
 		--amend $(REPO_URL):$(BUILD_TAG)-amd64
-
 .PHONY: multi-platform-manifest-push
  multi-platform-manifest-push:
 	docker manifest push $(REPO_URL):$(BUILD_TAG)
