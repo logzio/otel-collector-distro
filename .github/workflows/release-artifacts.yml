@@ -1,0 +1,25 @@
+name: publish artifacts on a new release
+on:
+  release:
+    types: [published]
+jobs:
+  publish_artifacts:
+    strategy:
+      matrix:
+        os_arch: [ darwin_amd64, linux_amd64, linux_arm64, linux_arm, windows_amd64  ]
+    name: publish artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Install builder
+        run: make install-builder
+        working-directory: ./otelbuilder
+      - name: build artifacts
+        run: make otelcol-logzio-all
+        working-directory: ./otelbuilder
+      - name: upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os_arch }}
+          path: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}

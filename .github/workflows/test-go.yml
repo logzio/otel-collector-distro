@@ -1,0 +1,24 @@
+name: test components
+
+on:
+  push:
+    branches: [ development ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  test-exporters:
+    strategy:
+      matrix:
+        exporters: [logzioexporter]
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: |
+          echo ${{ matrix.exporters }}
+      - uses: actions/checkout@v1
+      - name: cd to dir
+        run: cd ./logzio/exporter/${{ matrix.exporters }}
+      - name: go test
+        run: go test
+      - name: go back to root
+        run: cd ....

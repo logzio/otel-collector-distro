@@ -1,0 +1,46 @@
+receivers:
+  jaeger:
+    protocols:
+      thrift_compact:
+        endpoint: "0.0.0.0:6831"
+      thrift_binary:
+        endpoint: "0.0.0.0:6832"
+      grpc:
+        endpoint: "0.0.0.0:14250"
+      thrift_http:
+        endpoint: "0.0.0.0:14268"
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+  zipkin:
+    endpoint: "0.0.0.0:9411"
+exporters:
+  logzio:
+    region: ${LOGZIO_REGION}
+    account_token: ${TRACING_TOKEN}
+  logging:
+processors:
+  batch:
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 2000
+extensions:
+  health_check: {}
+  memory_ballast: {}
+  pprof:
+    endpoint: :1777
+  zpages:
+    endpoint: :55679
+service:
+  extensions: [pprof, zpages, health_check, memory_ballast]
+  pipelines:
+    traces:
+      receivers: [jaeger, zipkin, otlp]
+      processors: [batch, memory_limiter]
+      exporters: [logging, logzio]
+  telemetry:
+    logs:
+      level: "debug"
