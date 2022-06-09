@@ -62,7 +62,7 @@ receivers:
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/kafkareceiver v0.52.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/opencensusreceiver v0.52.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/podmanreceiver v0.52.0"
-  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v0.48.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v0.52.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/receivercreator v0.52.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/redisreceiver v0.52.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/sapmreceiver v0.52.0"

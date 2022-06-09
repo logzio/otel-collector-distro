@@ -1,10 +1,11 @@
 # Logzio Exporter
 
-| Status                   |           |
-| ------------------------ |-----------|
-| Stability                | [beta]    |
-| Supported pipeline types | [traces, logs]    |
-| Distributions            | [contrib, logzio] |
+| Status                   |                       |
+| ------------------------ | --------------------- |
+| Stability                | traces [stable]       |
+|                          | logs [beta]           |
+| Supported pipeline types | traces, logs |
+| Distributions            |  [contrib]   |
 
 This exporter supports sending trace and log data to [Logz.io](https://www.logz.io)
 

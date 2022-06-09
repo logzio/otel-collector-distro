@@ -20,7 +20,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter/objects"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
@@ -31,13 +38,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
-	"time"
 )
 
 const (
@@ -47,9 +47,10 @@ const (
 )
 
 var (
-	resourceAttributes1 = map[string]interface{}{"resource-attr": "resource-attr-val-1"}
-	TestLogTime         = time.Now()
-	TestLogTimestamp    = pcommon.NewTimestampFromTime(TestLogTime)
+	resourceAttributes1  = map[string]interface{}{"resource-attr": "resource-attr-val-1"}
+	TestLogTime          = time.Now()
+	TestLogTimeUnixMilli = TestLogTime.UnixMilli()
+	TestLogTimestamp     = pcommon.NewTimestampFromTime(TestLogTime)
 )
 
 // Resource Attributes
@@ -105,6 +106,26 @@ func fillLogTwo(log plog.LogRecord) {
 	attrs.InsertString("env", "dev")
 	log.Body().SetStringVal("something happened")
 }
+func fillLogNoTimestamp(log plog.LogRecord) {
+	log.SetDroppedAttributesCount(1)
+	log.SetSeverityNumber(plog.SeverityNumberINFO)
+	log.SetSeverityText("Info")
+
+	attrs := log.Attributes()
+	attrs.InsertString("customer", "acme")
+	attrs.InsertDouble("number", 64)
+	attrs.InsertBool("bool", true)
+	attrs.InsertString("env", "dev")
+	log.Body().SetStringVal("something happened")
+}
+
+func GenerateLogsOneEmptyTimestamp() plog.Logs {
+	ld := GenerateLogsOneEmptyLogRecord()
+	logs := ld.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords()
+	fillLogOne(logs.At(0))
+	fillLogNoTimestamp(logs.AppendEmpty())
+	return ld
+}
 
 func GenerateLogsOneEmptyResourceLogs() plog.Logs {
 	ld := plog.NewLogs()
@@ -147,9 +168,16 @@ func GenerateLogsManyLogRecordsSameResource(count int) plog.Logs {
 }
 
 func testLogsExporter(ld plog.Logs, t *testing.T, cfg *Config) error {
+	var err error
 	params := componenttest.NewNopExporterCreateSettings()
 	exporter, err := CreateLogsExporter(context.Background(), params, cfg)
+	if err != nil {
+		return err
+	}
 	err = exporter.Start(context.Background(), componenttest.NewNopHost())
+	if err != nil {
+		return err
+	}
 	require.NoError(t, err)
 	ctx := context.Background()
 	err = exporter.ConsumeLogs(ctx, ld)
@@ -191,7 +219,13 @@ func newTestTraces() ptrace.Traces {
 func testTracesExporter(td ptrace.Traces, t *testing.T, cfg *Config) error {
 	params := componenttest.NewNopExporterCreateSettings()
 	exporter, err := CreateTracesExporter(context.Background(), params, cfg)
+	if err != nil {
+		return err
+	}
 	err = exporter.Start(context.Background(), componenttest.NewNopHost())
+	if err != nil {
+		return err
+	}
 	require.NoError(t, err)
 	ctx := context.Background()
 	err = exporter.ConsumeTraces(ctx, td)
@@ -304,13 +338,13 @@ func TestPushTraceData(tester *testing.T) {
 	res.Attributes().UpsertString(conventions.AttributeHostName, testHost)
 	err := testTracesExporter(td, tester, &cfg)
 	require.NoError(tester, err)
-	var logzioSpan objects.LogzioSpan
+	var logzioSpan LogzioSpan
 	decoded, _ := gUnzipData(recordedRequests)
 	requests := strings.Split(string(decoded), "\n")
 	assert.NoError(tester, json.Unmarshal([]byte(requests[0]), &logzioSpan))
 	assert.Equal(tester, testOperation, logzioSpan.OperationName)
 	assert.Equal(tester, testService, logzioSpan.Process.ServiceName)
-	var logzioService objects.LogzioService
+	var logzioService LogzioService
 	assert.NoError(tester, json.Unmarshal([]byte(requests[1]), &logzioService))
 	assert.Equal(tester, testOperation, logzioService.OperationName)
 	assert.Equal(tester, testService, logzioService.ServiceName)

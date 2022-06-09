@@ -16,9 +16,10 @@ package logzioexporter
 
 import (
 	"context"
-	"go.opentelemetry.io/collector/config/confighttp"
 	"path/filepath"
 	"testing"
+
+	"go.opentelemetry.io/collector/config/confighttp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -50,12 +51,12 @@ func TestCreateTracesExporter(t *testing.T) {
 }
 
 func TestGenerateUrl(t *testing.T) {
-	type generateUrlTest struct {
+	type generateURLTest struct {
 		endpoint string
 		region   string
 		expected string
 	}
-	var generateUrlTests = []generateUrlTest{
+	var generateURLTests = []generateURLTest{
 		{"", "us", "https://listener.logz.io:8071/?token=token"},
 		{"", "", "https://listener.logz.io:8071/?token=token"},
 		{"https://doesnotexist.com", "", "https://doesnotexist.com"},
@@ -66,7 +67,7 @@ func TestGenerateUrl(t *testing.T) {
 		{"", "Us", "https://listener.logz.io:8071/?token=token"},
 		{"", "EU", "https://listener-eu.logz.io:8071/?token=token"},
 	}
-	for _, test := range generateUrlTests {
+	for _, test := range generateURLTests {
 		cfg := &Config{
 			Region:           test.region,
 			Token:            "token",
@@ -80,12 +81,12 @@ func TestGenerateUrl(t *testing.T) {
 	}
 }
 
-func TestGetListenerUrl(t *testing.T) {
-	type getListenerUrlTest struct {
+func TestGetListenerURL(t *testing.T) {
+	type getListenerURLTest struct {
 		arg1     string
 		expected string
 	}
-	var getListenerUrlTests = []getListenerUrlTest{
+	var getListenerURLTests = []getListenerURLTest{
 		{"us", "https://listener.logz.io:8071"},
 		{"eu", "https://listener-eu.logz.io:8071"},
 		{"au", "https://listener-au.logz.io:8071"},
@@ -98,8 +99,8 @@ func TestGetListenerUrl(t *testing.T) {
 		{"US", "https://listener.logz.io:8071"},
 		{"Us", "https://listener.logz.io:8071"},
 	}
-	for _, test := range getListenerUrlTests {
-		output := getListenerUrl(test.arg1)
+	for _, test := range getListenerURLTests {
+		output := getListenerURL(test.arg1)
 		require.Equal(t, output, test.expected)
 	}
 }
