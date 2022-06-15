@@ -19,7 +19,7 @@ jobs:
         run: make otelcol-logzio-all
         working-directory: ./otelbuilder
       - name: upload artifact
-        uses: actions/upload-artifact@v3
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: ${{ matrix.os_arch }}
-          path: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}
+          files: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}
