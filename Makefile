@@ -94,6 +94,7 @@ install-tools:
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/client9/misspell/cmd/misspell@v0.3.4
 	go install github.com/sigstore/cosign/cmd/cosign@v1.5.2
+	go install github.com/pavius/impi/cmd/impi@latest
 
 .PHONY: test-componenets
 test-components:
