@@ -88,16 +88,26 @@ multi-platform-manifest-create-push:
 	$(MAKE) multi-platform-manifest-create \
     $(MAKE) multi-platform-manifest-push
 
+.PHONY: install-tools
+install-tools:
+	go install github.com/google/addlicense@v1.0.0
+	go install golang.org/x/tools/cmd/goimports@latest
+	go install github.com/client9/misspell/cmd/misspell@v0.3.4
+	go install github.com/sigstore/cosign/cmd/cosign@v1.5.2
+
 .PHONY: test-componenets
 test-components:
+	$(MAKE) install-tools
 	$(MAKE) for-all CMD="make test"
 
 .PHONY: format-components
 format-components:
+	$(MAKE) install-tools
 	$(MAKE) for-all CMD="make fmt"
 
 .PHONY: lint-components
 lint-components:
+	$(MAKE) install-tools
 	$(MAKE) for-all CMD="make lint"
 
 .PHONY: for-all
