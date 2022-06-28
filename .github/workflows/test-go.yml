@@ -1,4 +1,4 @@
-name: test components
+name: Test-components
 
 on:
   push:
@@ -9,15 +9,11 @@ jobs:
   test-exporters:
     strategy:
       matrix:
-        exporters: [logzioexporter]
         os: [ubuntu-latest, windows-latest, macos-12, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: test
-        run: |
-          echo ${{ matrix.exporters }}
+      - name: checkout
       - uses: actions/checkout@v2
       - name: go test
-        working-directory: ./logzio/exporter/${{ matrix.exporters }}
-        run: go test -race -v -covermode=atomic -coverprofile=coverage.out
+        run: make test-componenets
 

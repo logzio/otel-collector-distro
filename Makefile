@@ -1,7 +1,3 @@
-# Build
-.PHONY: build
-build:
-	@$(MAKE) -C ./otelcolbuilder/ build
 
 BUILD_TAG ?= latest
 BUILD_CACHE_TAG = latest-builder-cache
@@ -11,6 +7,15 @@ IMAGE_NAME_DEV = logzio-otel-collector-dev
 DOCKERHUB_ORG = logzio
 REPO_URL = $(DOCKERHUB_ORG)/$(IMAGE_NAME)
 REPO_URL_DEV = $(DOCKERHUB_ORG)/$(IMAGE_NAME_DEV)
+
+ALL_MODULES := $(shell find ./logzio/ -type f -name "go.mod" -exec dirname {} \; | sort )
+
+
+# Build
+.PHONY: build
+build:
+	@$(MAKE) -C ./otelcolbuilder/ build
+
 
 .PHONY: _build
 _build:
@@ -82,4 +87,28 @@ multi-platform-manifest-create:
 multi-platform-manifest-create-push:
 	$(MAKE) multi-platform-manifest-create \
     $(MAKE) multi-platform-manifest-push
+
+.PHONY: test-componenets
+test-components:
+	$(MAKE) for-all CMD="make test"
+
+.PHONY: format-lint-components
+format-lint-components:
+	$(MAKE) for-all CMD="make lint"
+	$(MAKE) for-all CMD="make fmt"
+
+.PHONY: for-all
+for-all:
+	@set -e; for dir in $(ALL_MODULES); do \
+	  (cd "$${dir}" && \
+	  	echo "running $${CMD} in $${dir}" && \
+	 	$${CMD} ); \
+	done
+
+
+
+
+
+
+
 
