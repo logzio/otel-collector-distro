@@ -105,9 +105,11 @@ format-components:
 	$(MAKE) install-tools
 	$(MAKE) for-all CMD="make fmt"
 
+
 .PHONY: lint-components
 lint-components:
 	$(MAKE) install-tools
+	$(MAKE) for-all CMD="make addlicense"
 	$(MAKE) for-all CMD="make lint"
 
 .PHONY: for-all
