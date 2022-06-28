@@ -1,5 +1,5 @@
 # Logzio opentelemetry collector distro
-[![Go Report Card](https://goreportcard.com/badge/github.com/logzio/otel-collector-distro)](https://goreportcard.com/report/github.com/logzio/otel-collector-distro)
+[![Go Report Card](https://goreportcard.com/badge/github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter)](https://goreportcard.com/report/github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 Logz.io distribution of the OpenTelemetry collector. It provides a simple and unified solution to collect, process, and ship telemetry data to logz.io

@@ -9,8 +9,6 @@ exporters:
     # Maintained exporters
   - gomod: "github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter v0.0.1"
     path: ./../logzio/exporter/logzioexporter
-  - gomod: "github.com/logzio/otel-collector-distro/logzio/exporter/jsonlogexporter v0.0.1"
-    path: ./../logzio/exporter/jsonlogexporter
     # Upstream exporters
   - import: go.opentelemetry.io/collector/exporter/loggingexporter
     gomod: go.opentelemetry.io/collector v0.54.0
