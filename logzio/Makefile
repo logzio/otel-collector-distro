@@ -54,7 +54,7 @@ misspell-correction:
 	$(MISSPELL_CORRECTION) $(ALL_SRC_AND_DOC)
 
 .PHONY: lint
-lint: checklicense impi misspell
+lint: impi misspell
 	$(LINT) run --allow-parallel-runners
 
 .PHONY: impi
