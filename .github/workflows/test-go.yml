@@ -1,5 +1,4 @@
 name: Test-components
-
 on:
   push:
     branches: [ development ]
@@ -9,7 +8,7 @@ jobs:
   test-exporters:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-12, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: checkout
