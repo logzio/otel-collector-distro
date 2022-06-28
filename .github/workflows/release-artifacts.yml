@@ -16,7 +16,7 @@ jobs:
         run: make install-builder
         working-directory: ./otelbuilder
       - name: build artifacts
-        run: make otelcol-logzio-all-sys
+        run: make otelcol-logzio-${{ matrix.os_arch }}
         working-directory: ./otelbuilder
       - name: upload artifacts to release
         uses: softprops/action-gh-release@v1
