@@ -1,4 +1,4 @@
-name: Fmt check
+name: Format check
 
 on:
   push:
