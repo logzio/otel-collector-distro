@@ -16,9 +16,9 @@ jobs:
         run: make install-builder
         working-directory: ./otelbuilder
       - name: build artifacts
-        run: make otelcol-logzio-all
+        run: make otelcol-logzio-all-sys
         working-directory: ./otelbuilder
-      - name: upload artifact
+      - name: upload artifacts to release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:

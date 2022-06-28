@@ -83,7 +83,7 @@ lint: install-builder generate-sources
 	@$(MAKE) -C cmd lint
 
 # build collector distro binaries for all supported os arch combinations
-.PHONY: otelcol-logzio-all
+.PHONY: otelcol-logzio-all-sys
 otelcol-logzio-all-sys: otelcol-logzio-darwin_amd64 otelcol-logzio-linux_amd64 otelcol-logzio-windows_amd64 otelcol-logzio-linux_arm64 otelcol-logzio-linux_arm
 
 .PHONY: otelcol-logzio-darwin_amd64
