@@ -1,4 +1,5 @@
-name: Test-components
+name: Test-mcomponents
+
 on:
   push:
     branches: [ development ]
@@ -8,11 +9,13 @@ jobs:
   test-exporters:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-12]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: checkout
+      - name: test
+        run: |
+          echo runing make test-components
       - uses: actions/checkout@v2
       - name: go test
-        run: make test-componenets
+        run: make test-components
 
