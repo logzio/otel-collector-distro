@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logzioexporter // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/logzioexporter"
+package logzioexporter // import "github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter"
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"go.opentelemetry.io/collector/config/configcompression"
-	"go.opentelemetry.io/collector/config/confighttp"
-	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/collector/config/configcompression"
+
+	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config"
@@ -59,7 +61,7 @@ func createDefaultConfig() config.Exporter {
 	}
 }
 
-func getListenerUrl(region string) string {
+func getListenerURL(region string) string {
 	var url string
 	lowerCaseRegion := strings.ToLower(region)
 	switch lowerCaseRegion {
@@ -84,16 +86,16 @@ func getListenerUrl(region string) string {
 }
 
 func generateEndpoint(cfg *Config) (string, error) {
-	defaultUrl := fmt.Sprintf("%s/?token=%s", getListenerUrl(""), cfg.Token)
+	defaultURL := fmt.Sprintf("%s/?token=%s", getListenerURL(""), cfg.Token)
 	switch {
-	case cfg.Endpoint != "":
-		return cfg.Endpoint, nil
+	case cfg.HTTPClientSettings.Endpoint != "":
+		return cfg.HTTPClientSettings.Endpoint, nil
 	case cfg.Region != "":
-		return fmt.Sprintf("%s/?token=%s", getListenerUrl(cfg.Region), cfg.Token), nil
-	case cfg.Endpoint == "" && cfg.Region == "":
-		return defaultUrl, errors.New("failed to generate endpoint, Endpoint or Region must be set")
+		return fmt.Sprintf("%s/?token=%s", getListenerURL(cfg.Region), cfg.Token), nil
+	case cfg.HTTPClientSettings.Endpoint == "" && cfg.Region == "":
+		return defaultURL, errors.New("failed to generate endpoint, Endpoint or Region must be set")
 	default:
-		return defaultUrl, nil
+		return defaultURL, nil
 	}
 }
 

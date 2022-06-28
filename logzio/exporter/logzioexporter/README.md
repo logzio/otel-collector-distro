@@ -1,10 +1,11 @@
 # Logzio Exporter
 
-| Status                   |           |
-| ------------------------ |-----------|
-| Stability                | [beta]    |
-| Supported pipeline types | [traces, logs]    |
-| Distributions            | [contrib, logzio] |
+| Status                   |                       |
+| ------------------------ | --------------------- |
+| Stability                | traces [stable]       |
+|                          | logs [beta]           |
+| Supported pipeline types | traces, logs |
+| Distributions            |  [contrib, logzio]   |
 
 This exporter supports sending trace and log data to [Logz.io](https://www.logz.io)
 
@@ -26,7 +27,7 @@ Logz.io exporter is utilizing opentelemetry [exporter helper](https://github.com
         - `num_seconds` is the number of seconds to buffer in case of a backend outage
         - `requests_per_second` is the average number of requests per seconds.
         - default = 5000
-- `timeout`: Time to wait per individual attempt to send data to a backend. default = 5s
+- `timeout`: Time to wait per individual attempt to send data to a backend. default = 30s
 
 #### Tracing example:
 * We recommend using `batch` processor. Batching helps better compress the data and reduce the number of outgoing connections required to transmit the data.
@@ -164,3 +165,8 @@ service:
     logs:
       level: debug #activate debug mode
 ```
+
+
+[beta]:https://github.com/open-telemetry/opentelemetry-collector#beta
+[stable]:https://github.com/open-telemetry/opentelemetry-collector#stable
+[contrib]:https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib

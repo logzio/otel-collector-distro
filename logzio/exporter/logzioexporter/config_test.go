@@ -15,12 +15,13 @@
 package logzioexporter
 
 import (
-	"go.opentelemetry.io/collector/config/configcompression"
-	"go.opentelemetry.io/collector/config/confighttp"
-	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"go.opentelemetry.io/collector/config/configcompression"
+	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,7 +43,7 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.Equal(t, 2, len(cfg.Exporters))
 
-	cfgExp := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
+	actualCfg := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
 	expected := &Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
 		Token:            "token",
@@ -61,7 +62,7 @@ func TestLoadConfig(t *testing.T) {
 		// We almost read 0 bytes, so no need to tune ReadBufferSize.
 		WriteBufferSize: 512 * 1024,
 	}
-	assert.Equal(t, expected, cfgExp)
+	assert.Equal(t, expected, actualCfg)
 }
 
 func TestDefaultLoadConfig(t *testing.T) {
@@ -77,7 +78,7 @@ func TestDefaultLoadConfig(t *testing.T) {
 
 	assert.Equal(t, 2, len(cfg.Exporters))
 
-	cfgExp := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
+	actualCfg := cfg.Exporters[config.NewComponentIDWithName(typeStr, "2")]
 	expected := &Config{
 		ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
 		Token:            "logzioTESTtoken",
@@ -93,5 +94,54 @@ func TestDefaultLoadConfig(t *testing.T) {
 		// We almost read 0 bytes, so no need to tune ReadBufferSize.
 		WriteBufferSize: 512 * 1024,
 	}
-	assert.Equal(t, expected, cfgExp)
+	assert.Equal(t, expected, actualCfg)
+}
+
+func TestCheckAndWarnDeprecatedOptions(t *testing.T) {
+	// Config with legacy options
+	actualCfg := &Config{
+		ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
+		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
+		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
+		Token:            "logzioTESTtoken",
+		CustomEndpoint:   "https://api.example.com",
+		QueueMaxLength:   10,
+		DrainInterval:    10,
+		HTTPClientSettings: confighttp.HTTPClientSettings{
+			Endpoint: "",
+			Timeout:  10 * time.Second,
+			Headers:  map[string]string{},
+			// Default to gzip compression
+			Compression: configcompression.Gzip,
+			// We almost read 0 bytes, so no need to tune ReadBufferSize.
+			WriteBufferSize: 512 * 1024,
+		},
+	}
+	params := componenttest.NewNopExporterCreateSettings()
+	logger := hclog2ZapLogger{
+		Zap:  params.Logger,
+		name: loggerName,
+	}
+	actualCfg.checkAndWarnDeprecatedOptions(&logger)
+
+	expected := &Config{
+		ExporterSettings: config.NewExporterSettings(config.NewComponentIDWithName(typeStr, "2")),
+		Token:            "logzioTESTtoken",
+		CustomEndpoint:   "https://api.example.com",
+		QueueMaxLength:   10,
+		DrainInterval:    10,
+		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
+		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
+		HTTPClientSettings: confighttp.HTTPClientSettings{
+			Endpoint: "https://api.example.com",
+			Timeout:  10 * time.Second,
+			Headers:  map[string]string{},
+			// Default to gzip compression
+			Compression: configcompression.Gzip,
+			// We almost read 0 bytes, so no need to tune ReadBufferSize.
+			WriteBufferSize: 512 * 1024,
+		},
+	}
+	expected.QueueSettings.QueueSize = 10
+	assert.Equal(t, expected, actualCfg)
 }

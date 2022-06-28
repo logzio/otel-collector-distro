@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logzioexporter // Package logzioexporter import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/logzioexporter"
+package logzioexporter // import "github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter"
 
 import (
 	"bytes"
@@ -20,24 +20,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	"github.com/hashicorp/go-hclog"
-	"github.com/jaegertracing/jaeger/model"
-	"github.com/jaegertracing/jaeger/pkg/cache"
-	"github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter/objects"
-	"go.opentelemetry.io/collector/consumer/consumererror"
-	"go.opentelemetry.io/collector/pdata/plog"
-	"google.golang.org/genproto/googleapis/rpc/status"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/jaeger"
+	"github.com/hashicorp/go-hclog"
+	"github.com/jaegertracing/jaeger/model"
+	"github.com/jaegertracing/jaeger/pkg/cache"
+	"go.opentelemetry.io/collector/consumer/consumererror"
+	"go.opentelemetry.io/collector/pdata/plog"
+	"google.golang.org/genproto/googleapis/rpc/status"
+	"google.golang.org/protobuf/proto"
+
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/jaeger"
 )
 
 const (
@@ -81,18 +82,21 @@ func newLogzioTracesExporter(config *Config, set component.ExporterCreateSetting
 	if err != nil {
 		return nil, err
 	}
-	if err := config.Validate(); err != nil {
+	if err = config.Validate(); err != nil {
 		return nil, err
 	}
-	exporter.config.Endpoint, err = generateEndpoint(config)
+	exporter.config.HTTPClientSettings.Endpoint, err = generateEndpoint(config)
 	if err != nil {
 		return nil, err
 	}
+	config.checkAndWarnDeprecatedOptions(exporter.logger)
 	return exporterhelper.NewTracesExporter(
 		config,
 		set,
 		exporter.pushTraceData,
 		exporterhelper.WithStart(exporter.start),
+		// disable since we rely on http.Client timeout logic.
+		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),
 		exporterhelper.WithQueue(config.QueueSettings),
 		exporterhelper.WithRetry(config.RetrySettings),
 	)
@@ -102,18 +106,21 @@ func newLogzioLogsExporter(config *Config, set component.ExporterCreateSettings)
 	if err != nil {
 		return nil, err
 	}
-	if err := config.Validate(); err != nil {
+	if err = config.Validate(); err != nil {
 		return nil, err
 	}
-	exporter.config.Endpoint, err = generateEndpoint(config)
+	exporter.config.HTTPClientSettings.Endpoint, err = generateEndpoint(config)
 	if err != nil {
 		return nil, err
 	}
+	config.checkAndWarnDeprecatedOptions(exporter.logger)
 	return exporterhelper.NewLogsExporter(
 		config,
 		set,
 		exporter.pushLogData,
 		exporterhelper.WithStart(exporter.start),
+		// disable since we rely on http.Client timeout logic.
+		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),
 		exporterhelper.WithQueue(config.QueueSettings),
 		exporterhelper.WithRetry(config.RetrySettings),
 	)
@@ -127,6 +134,7 @@ func (exporter *logzioExporter) start(_ context.Context, host component.Host) er
 	exporter.client = client
 	return nil
 }
+
 func (exporter *logzioExporter) pushLogData(ctx context.Context, ld plog.Logs) error {
 	var dataBuffer bytes.Buffer
 	resourceLogs := ld.ResourceLogs()
@@ -137,19 +145,19 @@ func (exporter *logzioExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 			logRecords := scopeLogs.At(j).LogRecords()
 			for k := 0; k < logRecords.Len(); k++ {
 				log := logRecords.At(k)
-				jsonLog := objects.ConvertLogRecordToJson(log, resource, exporter.logger)
+				jsonLog := ConvertLogRecordToJSON(log, resource, exporter.logger)
 				logzioLog, err := json.Marshal(jsonLog)
 				if err != nil {
 					return err
 				}
-				dataBuffer.Write(append(logzioLog, '\n'))
+				_, err = dataBuffer.Write(append(logzioLog, '\n'))
 				if err != nil {
 					return err
 				}
 			}
 		}
 	}
-	err := exporter.export(ctx, exporter.config.Endpoint, dataBuffer.Bytes())
+	err := exporter.export(ctx, exporter.config.HTTPClientSettings.Endpoint, dataBuffer.Bytes())
 	// reset the data buffer after each export to prevent duplicated data
 	dataBuffer.Reset()
 	return err
@@ -167,8 +175,11 @@ func (exporter *logzioExporter) pushTraceData(ctx context.Context, traces ptrace
 			span.Process = batch.Process
 			span.Tags = exporter.dropEmptyTags(span.Tags)
 			span.Process.Tags = exporter.dropEmptyTags(span.Process.Tags)
-			logzioSpan, err := objects.TransformToLogzioSpanBytes(span)
-			dataBuffer.Write(append(logzioSpan, '\n'))
+			logzioSpan, transformErr := TransformToLogzioSpanBytes(span)
+			if transformErr != nil {
+				return transformErr
+			}
+			_, err = dataBuffer.Write(append(logzioSpan, '\n'))
 			if err != nil {
 				return err
 			}
@@ -176,24 +187,24 @@ func (exporter *logzioExporter) pushTraceData(ctx context.Context, traces ptrace
 			// if the service hash already exists in cache: skip
 			// else: store service in cache and send to logz.io
 			// this prevents sending duplicate logzio services
-			service := objects.NewLogzioService(span)
-			serviceHash, err := service.HashCode()
-			if exporter.serviceCache.Get(serviceHash) == nil || err != nil {
-				if err == nil {
+			service := NewLogzioService(span)
+			serviceHash, hashErr := service.HashCode()
+			if exporter.serviceCache.Get(serviceHash) == nil || hashErr != nil {
+				if hashErr == nil {
 					exporter.serviceCache.Put(serviceHash, serviceHash)
 				}
-				serviceBytes, err := json.Marshal(service)
-				if err != nil {
-					return err
+				serviceBytes, marshalErr := json.Marshal(service)
+				if marshalErr != nil {
+					return marshalErr
 				}
-				dataBuffer.Write(append(serviceBytes, '\n'))
+				_, err = dataBuffer.Write(append(serviceBytes, '\n'))
 				if err != nil {
 					return err
 				}
 			}
 		}
 	}
-	err = exporter.export(ctx, exporter.config.Endpoint, dataBuffer.Bytes())
+	err = exporter.export(ctx, exporter.config.HTTPClientSettings.Endpoint, dataBuffer.Bytes())
 	// reset the data buffer after each export to prevent duplicated data
 	dataBuffer.Reset()
 	return err
