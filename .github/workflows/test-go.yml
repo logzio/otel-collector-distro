@@ -10,15 +10,14 @@ jobs:
     strategy:
       matrix:
         exporters: [logzioexporter]
-    runs-on: ubuntu-latest
+        os: [ubuntu-latest, windows-latest, macos-12, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: test
         run: |
           echo ${{ matrix.exporters }}
-      - uses: actions/checkout@v1
-      - name: cd to dir
-        run: cd ./logzio/exporter/${{ matrix.exporters }}
+      - uses: actions/checkout@v2
       - name: go test
-        run: go test
-      - name: go back to root
-        run: cd ....
+        working-directory: ./logzio/exporter/${{ matrix.exporters }}
+        run: go test -race -v -covermode=atomic -coverprofile=coverage.out
+
