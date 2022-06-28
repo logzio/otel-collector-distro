@@ -1,4 +1,4 @@
-name: Test-components
+name: fmt check
 
 on:
   push:
@@ -14,8 +14,8 @@ jobs:
     steps:
       - name: echo
         run: |
-          echo runing make test-components
+          echo runing make format-components
       - uses: actions/checkout@v2
-      - name: go test
-        run: make test-components
+      - name: go fmt
+        run: make format-components
 

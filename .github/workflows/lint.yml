@@ -1,4 +1,4 @@
-name: Test-components
+name: lint check
 
 on:
   push:
@@ -14,8 +14,8 @@ jobs:
     steps:
       - name: echo
         run: |
-          echo runing make test-components
+          echo runing make lint-components
       - uses: actions/checkout@v2
-      - name: go test
-        run: make test-components
+      - name: lint
+        run: make lint-components
 

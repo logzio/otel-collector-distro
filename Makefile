@@ -92,10 +92,13 @@ multi-platform-manifest-create-push:
 test-components:
 	$(MAKE) for-all CMD="make test"
 
-.PHONY: format-lint-components
-format-lint-components:
-	$(MAKE) for-all CMD="make lint"
+.PHONY: format-components
+format-components:
 	$(MAKE) for-all CMD="make fmt"
+
+.PHONY: lint-components
+lint-components:
+	$(MAKE) for-all CMD="make lint"
 
 .PHONY: for-all
 for-all:
