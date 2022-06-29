@@ -24,11 +24,16 @@ jobs:
       - name: build artifacts
         run: make otelcol-logzio-${{ matrix.os_arch }}
         working-directory: ./otelbuilder
+      - name: compress
+        run: tar -czvf otelcol-logzio-${{ matrix.os_arch }}.tar.gz ./otelcol-logzio-${{ matrix.os_arch }}
+        working-directory: ./otelbuilder/cmd
       - name: upload artifacts to release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}
+          files: |
+            ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz
+            ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}
 
 
 

@@ -5,17 +5,36 @@
 Logz.io distribution of the OpenTelemetry collector. It provides a simple and unified solution to collect, process, and ship telemetry data to logz.io
 
 ## Quick Start
-#### macOS
+### macOS
 Start collecting system logs from your macOS machine:
-* Download the `otelcol-logzio-darwin_amd64` binary from the latest release
-* Run `chmod +x otelcol-logzio-darwin_amd64`
-* Create configuration file named `macos-logs.yml` you can find the appropriate configuration in [otel-config](/otel-config/macos-logs.yml)
-* Run logzio otel collector distro:
+* Run logzio otel collector distro installation script:
 ```shell
-export TRACING_TOKEN=<<logzio_logs_token>> 
+# Download the `otelcol-logzio-darwin_amd64` binary from the latest release
+curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.0.1-test/otelcol-logzio-darwin_amd64 > otelcol-logzio-darwin_amd64
+chmod +x otelcol-logzio-darwin_amd64
+# Download Macos quickstart configuration file
+curl -L https://raw.githubusercontent.com/logzio/otel-collector-distro/master/otel-config/macos.yml > macos.yml
+# Configure the related environment variables and run the binary
+export LOGS_TOKEN=<<logzio_logs_token>> 
 export LOGZIO_REGION=<<logzio_region>>
 export LOGZIO_TYPE=<<logzio_log_type>>
-./otelcol-logzio-darwin_amd64 --config macos-logs.yml
+./otelcol-logzio-darwin_amd64 --config macos.yml
+```
+
+### Ubuntu linux
+Start collecting system logs from your ubuntu linux machine:
+* Run logzio otel collector distro installation script:
+```shell
+# Download the `otelcol-logzio-linux_amd64` binary from the latest release
+curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.0.1-test/otelcol-logzio-linux_amd64 > otelcol-logzio-linux_amd64
+chmod +x otelcol-logzio-linux_amd64
+# Download linux quickstart configuration file
+curl -L https://raw.githubusercontent.com/logzio/otel-collector-distro/master/otel-config/linux.yml > linux.yml
+# Configure the related environment variables and run the binary
+export LOGS_TOKEN=<<logzio_logs_token>> 
+export LOGZIO_REGION=<<logzio_region>>
+export LOGZIO_TYPE=<<logzio_log_type>>
+./otelcol-logzio-linux_amd64 --config linux.yml
 ```
 
 

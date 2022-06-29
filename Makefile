@@ -77,13 +77,25 @@ multi-platform-manifest-create:
 	docker manifest create $(REPO_URL):$(BUILD_TAG) \
 		--amend $(REPO_URL):$(BUILD_TAG)-arm64 \
 		--amend $(REPO_URL):$(BUILD_TAG)-amd64
+
+
+.PHONY: multi-platform-manifest-create-latest
+multi-platform-manifest-create-latest:
+	docker manifest create $(REPO_URL):latest \
+		--amend $(REPO_URL):$(BUILD_TAG)-arm64 \
+		--amend $(REPO_URL):$(BUILD_TAG)-amd64
+
+
 .PHONY: multi-platform-manifest-push
  multi-platform-manifest-push:
 	docker manifest push $(REPO_URL):$(BUILD_TAG)
 
+.PHONY: multi-platform-manifest-push-latest
+ multi-platform-manifest-push-latest:
+	docker manifest push $(REPO_URL):latest
+
 .PHONY: multi-platform-manifest-create-push
-multi-platform-manifest-create-push: multi-platform-manifest-create
-	$(MAKE) multi-platform-manifest-push
+multi-platform-manifest-create-push: multi-platform-manifest-create multi-platform-manifest-create-latest multi-platform-manifest-push multi-platform-manifest-push-latest
 
 .PHONY: install-tools
 install-tools:
