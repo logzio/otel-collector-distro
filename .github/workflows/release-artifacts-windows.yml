@@ -6,7 +6,7 @@ jobs:
   publish_artifacts:
     strategy:
       matrix:
-        os_arch: [ darwin_amd64, linux_amd64, linux_arm64, linux_arm  ]
+        os_arch: [ windows_amd64  ]
     name: publish artifacts
     runs-on: macos-latest
     steps:
@@ -28,7 +28,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}
+          files: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.exe
 
 
 

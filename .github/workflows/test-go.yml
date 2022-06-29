@@ -21,7 +21,7 @@ jobs:
           go-version: "1.17"
       # Load caches based on OS
       - name: Linux Cache Go Modules
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/cache@v2
         with:
           path: |
@@ -31,7 +31,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: MacOS Cache Go Modules
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
         uses: actions/cache@v2
         with:
           path: |
@@ -41,7 +41,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Windows Cache Go Modules
-        if: matrix.os == 'windows-2019'
+        if: matrix.os == 'windows-latest'
         uses: actions/cache@v2
         with:
           path: |

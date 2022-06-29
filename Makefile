@@ -1,8 +1,8 @@
 
 BUILD_TAG ?= latest
 BUILD_CACHE_TAG = latest-builder-cache
-IMAGE_NAME = logzio-otel-collector
-IMAGE_NAME_DEV = logzio-otel-collector-dev
+IMAGE_NAME = otel-collector-distro
+IMAGE_NAME_DEV = otel-collector-distro-dev
 
 DOCKERHUB_ORG = logzio
 REPO_URL = $(DOCKERHUB_ORG)/$(IMAGE_NAME)
@@ -68,7 +68,6 @@ build-container:
 		TAG="$(BUILD_TAG)"
 
 # build and push multi arch docker images to logzio docker hub
-.PHONY: build-container-multi-platform
 build-container-multi-platform:
 	$(MAKE) build-container-amd64 \
 	$(MAKE) build-container-arm64 \
