@@ -1,4 +1,4 @@
-name: Test-components
+name: unit-tests
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: publish artifacts on a new release
+name: build
 on:
   release:
     types: [published]
