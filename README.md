@@ -101,6 +101,7 @@ For general configuration help, see the [openTelemetry docs](https://opentelemet
 | jmxreceiver                     | tailsamplingprocessor         |                                    |                        |
 | journaldreceiver                |                               |                                    |                        |
 | telegrafreceiver                |                               |                                    |                        |
+| k8seventsreceiver               |                               |                                    |                        |
 | kafkametricsreceiver            |                               |                                    |                        |
 | kafkareceiver                   |                               |                                    |                        |
 | opencensusreceiver              |                               |                                    |                        |
