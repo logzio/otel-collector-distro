@@ -1,7 +1,9 @@
 # Logzio opentelemetry collector distro
 [![Go Report Card](https://goreportcard.com/badge/github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter)](https://goreportcard.com/report/github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Test-components](https://github.com/logzio/otel-collector-distro/actions/workflows/test-go.yml/badge.svg)](https://github.com/logzio/otel-collector-distro/actions/workflows/test-go.yml)
+[![unit-tests](https://github.com/logzio/otel-collector-distro/actions/workflows/test-go.yml/badge.svg)](https://github.com/logzio/otel-collector-distro/actions/workflows/test-go.yml)
+[![build](https://github.com/logzio/otel-collector-distro/actions/workflows/release-artifacts.yml/badge.svg)](https://github.com/logzio/otel-collector-distro/actions/workflows/release-artifacts.yml)
+
 
 Logz.io distribution of the OpenTelemetry collector. It provides a simple and unified solution to collect, process, and ship telemetry data to logz.io
 
@@ -45,10 +47,10 @@ The script below will perform the following steps:
 ```shell
 curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.0.1/otelcol-logzio-linux_amd64 > otelcol-logzio-linux_amd64
 chmod +x otelcol-logzio-linux_amd64
-curl -L https://raw.githubusercontent.com/logzio/otel-collector-distro/master/otel-config/linux.yml > linux.yml
-export LOGS_TOKEN=<<logzio_logs_token>> 
-export LOGZIO_REGION=<<logzio_region>>
-export LOGZIO_TYPE=<<logzio_log_type>>
+curl -L https://raw.githubusercontent.com/logzio/otel-collector-distro/development/otel-config/linux.yml > linux.yml
+export LOGS_TOKEN=ThlyYdhCHUJPlBVYZSBncSMABogmyBzK
+export LOGZIO_REGION=us
+export LOGZIO_TYPE=linux
 ./otelcol-logzio-linux_amd64 --config linux.yml
 ```
 
@@ -98,6 +100,7 @@ For general configuration help, see the [openTelemetry docs](https://opentelemet
 | jaegerreceiver                  | spanmetricsprocessor          |                                    |                        |
 | jmxreceiver                     | tailsamplingprocessor         |                                    |                        |
 | journaldreceiver                |                               |                                    |                        |
+| telegrafreceiver                |                               |                                    |                        |
 | kafkametricsreceiver            |                               |                                    |                        |
 | kafkareceiver                   |                               |                                    |                        |
 | opencensusreceiver              |                               |                                    |                        |

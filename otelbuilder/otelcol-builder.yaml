@@ -42,6 +42,7 @@ receivers:
   # Upstream receivers
   - import: go.opentelemetry.io/collector/receiver/otlpreceiver
     gomod: go.opentelemetry.io/collector v0.54.0
+  - gomod: "github.com/SumoLogic/sumologic-otel-collector/pkg/receiver/telegrafreceiver v0.53.0-sumo-0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver v0.54.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver v0.54.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsxrayreceiver v0.54.0"
@@ -91,3 +92,5 @@ replaces:
   # However, kubernetes/client-go still uses the old name for v0.5.5, and this causes go mod to complain
   # Replace this here instead of modifying indirect dependencies in packages, as it's more robust
   - github.com/googleapis/gnostic => github.com/google/gnostic v0.5.5
+  # Needed for telegrafreceiver
+  - github.com/influxdata/telegraf => github.com/SumoLogic/telegraf v1.22.0-sumo-4
