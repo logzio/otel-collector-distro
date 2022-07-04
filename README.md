@@ -100,7 +100,6 @@ For general configuration help, see the [openTelemetry docs](https://opentelemet
 | jaegerreceiver                  | spanmetricsprocessor          |                                    |                        |
 | jmxreceiver                     | tailsamplingprocessor         |                                    |                        |
 | journaldreceiver                |                               |                                    |                        |
-| telegrafreceiver                |                               |                                    |                        |
 | k8seventsreceiver               |                               |                                    |                        |
 | kafkametricsreceiver            |                               |                                    |                        |
 | kafkareceiver                   |                               |                                    |                        |
