@@ -16,13 +16,8 @@ The script below will perform the following steps:
 - Download Macos quickstart configuration file
 - Configure the related environment variables and run the binary
 
-#### Environment variables
-- `LOGS_TOKEN` -
-- `LOGZIO_REGION` -
-- `LOGZIO_TYPE` -
-
 ```shell
-curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.0.1/otelcol-logzio-darwin_amd64 > otelcol-logzio-darwin_amd64
+curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.54.0/otelcol-logzio-darwin_amd64 > otelcol-logzio-darwin_amd64
 chmod +x otelcol-logzio-darwin_amd64
 curl -L https://raw.githubusercontent.com/logzio/otel-collector-distro/master/otel-config/macos.yml > macos.yml
 export LOGS_TOKEN=<<logzio_logs_token>> 
@@ -39,18 +34,14 @@ The script below will perform the following steps:
 - Download linux quickstart configuration file
 - Configure the related environment variables and run the binary
 
-#### Environment variables
-- `LOGS_TOKEN` -
-- `LOGZIO_REGION` -
-- `LOGZIO_TYPE` -
 
 ```shell
-curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.0.1/otelcol-logzio-linux_amd64 > otelcol-logzio-linux_amd64
+curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.54.0/otelcol-logzio-linux_amd64 > otelcol-logzio-linux_amd64
 chmod +x otelcol-logzio-linux_amd64
 curl -L https://raw.githubusercontent.com/logzio/otel-collector-distro/development/otel-config/linux.yml > linux.yml
-export LOGS_TOKEN=ThlyYdhCHUJPlBVYZSBncSMABogmyBzK
-export LOGZIO_REGION=us
-export LOGZIO_TYPE=linux
+export LOGS_TOKEN=<<logzio_logs_token>> 
+export LOGZIO_REGION=<<logzio_region>>
+export LOGZIO_TYPE=<<logzio_log_type>>
 ./otelcol-logzio-linux_amd64 --config linux.yml
 ```
 
@@ -63,11 +54,8 @@ The script below will perform the following steps:
   - `hotrod` application container to generate traces
 - Configure the related environment variables and run the compose file
 
-#### Environment variables
-- `TRACING_TOKEN` -
-- `LOGZIO_REGION` -
 ```shell
-curl -L  https://raw.githubusercontent.com/logzio/otel-collector-distro/development/otel-config/docker-compose.yml > docker-compose.yml
+curl -L  https://raw.githubusercontent.com/logzio/otel-collector-distro/master/otel-config/docker-compose.yml > docker-compose.yml
 export TRACING_TOKEN=<<logzio_tracing_token>> 
 export LOGZIO_REGION=<<logzio_region>>
 docker compose up 
