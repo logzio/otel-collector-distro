@@ -1,5 +1,5 @@
 BINARY_NAME ?= otelcol-logzio
-BUILDER_VERSION ?= 0.49.0
+BUILDER_VERSION ?= 0.54.0
 BUILDER_REPO ?= github.com/open-telemetry/opentelemetry-collector
 BUILDER_BIN_NAME ?= opentelemetry-collector-builder
 VERSION ?= 0.0.1
@@ -83,7 +83,7 @@ lint: install-builder generate-sources
 	@$(MAKE) -C cmd lint
 
 # build collector distro binaries for all supported os arch combinations
-.PHONY: otelcol-logzio-all
+.PHONY: otelcol-logzio-all-sys
 otelcol-logzio-all-sys: otelcol-logzio-darwin_amd64 otelcol-logzio-linux_amd64 otelcol-logzio-windows_amd64 otelcol-logzio-linux_arm64 otelcol-logzio-linux_arm
 
 .PHONY: otelcol-logzio-darwin_amd64

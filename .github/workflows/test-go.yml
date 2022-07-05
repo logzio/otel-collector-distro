@@ -1,4 +1,4 @@
-name: test components
+name: unit-tests
 
 on:
   push:
@@ -6,19 +6,50 @@ on:
   pull_request:
     branches: [ main ]
 jobs:
-  test-exporters:
+  unit-tests:
     strategy:
+      fail-fast: false
       matrix:
-        exporters: [logzioexporter]
-    runs-on: ubuntu-latest
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: test
-        run: |
-          echo ${{ matrix.exporters }}
-      - uses: actions/checkout@v1
-      - name: cd to dir
-        run: cd ./logzio/exporter/${{ matrix.exporters }}
-      - name: go test
-        run: go test
-      - name: go back to root
-        run: cd ....
+      - name: Checkout Sources
+        uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17"
+      # Load caches based on OS
+      - name: Linux Cache Go Modules
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: MacOS Cache Go Modules
+        if: matrix.os == 'macos-latest'
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/Library/Caches/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Windows Cache Go Modules
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache@v2
+        with:
+          path: |
+            %LocalAppData%\go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Run Tests
+        run: make test-components
+

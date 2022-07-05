@@ -1,0 +1,25 @@
+name: Lint check
+
+on:
+  push:
+    branches: [ development ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  lint:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: echo
+        run: |
+          echo runing make lint-components
+      - uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17"
+      - name: lint
+        run: make lint-components
+
