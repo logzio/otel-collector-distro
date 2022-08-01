@@ -1,8 +1,8 @@
 BINARY_NAME ?= otelcol-logzio
-BUILDER_VERSION ?= 0.54.0
+BUILDER_VERSION ?= 0.56.0
 BUILDER_REPO ?= github.com/open-telemetry/opentelemetry-collector
 BUILDER_BIN_NAME ?= opentelemetry-collector-builder
-VERSION ?= 0.0.1
+VERSION ?= 0.56.0
 
 GO ?= go
 OS ?= $(shell uname -s | tr A-Z a-z)
