@@ -88,7 +88,7 @@ otelcol-logzio-all-sys: otelcol-logzio-darwin_amd64 otelcol-logzio-linux_amd64 o
 
 .PHONY: otelcol-logzio-darwin_amd64
 otelcol-logzio-darwin_amd64:
-	GOOS=darwin  GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_amd64
+	CGO_ENABLED=1 GOOS=darwin  GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_amd64
 
 .PHONY: otelcol-logzio-linux_amd64
 otelcol-logzio-linux_amd64:
