@@ -103,7 +103,7 @@ install-tools:
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/client9/misspell/cmd/misspell@latest
 	go install github.com/pavius/impi/cmd/impi@latest
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.3
 
 .PHONY: test-componenets
 test-components:
