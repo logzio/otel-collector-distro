@@ -53,9 +53,9 @@ func getTagsValues(tags []model.KeyValue) []string {
 	return values
 }
 
-// TransformToLogzioSpanBytes receives a Jaeger span, converts it to logzio span and returns it as a byte array.
+// transformToLogzioSpanBytes receives a Jaeger span, converts it to logzio span and returns it as a byte array.
 // The main differences between Jaeger span and logzio span are arrays which are represented as maps
-func TransformToLogzioSpanBytes(span *model.Span) ([]byte, error) {
+func transformToLogzioSpanBytes(span *model.Span) ([]byte, error) {
 	spanConverter := dbmodel.NewFromDomain(true, getTagsValues(span.Tags), TagDotReplacementCharacter)
 	jsonSpan := spanConverter.FromDomainEmbedProcess(span)
 	logzioSpan := LogzioSpan{
@@ -77,8 +77,8 @@ func TransformToLogzioSpanBytes(span *model.Span) ([]byte, error) {
 	return json.Marshal(logzioSpan)
 }
 
-// TransformToDbModelSpan coverts logz.io span to ElasticSearch span
-func (span *LogzioSpan) TransformToDbModelSpan() *dbmodel.Span {
+// transformToDbModelSpan coverts logz.io span to ElasticSearch span
+func (span *LogzioSpan) transformToDbModelSpan() *dbmodel.Span {
 	return &dbmodel.Span{
 		OperationName:   span.OperationName,
 		Process:         span.Process,

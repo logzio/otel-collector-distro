@@ -30,15 +30,19 @@ import (
 	"go.opentelemetry.io/collector/config"
 )
 
-const typeStr = "logzio"
+const (
+	typeStr = "logzio"
+	// The stability level of the exporter.
+	stability = component.StabilityLevelBeta
+)
 
 // NewFactory creates a factory for Logz.io exporter.
 func NewFactory() component.ExporterFactory {
 	return component.NewExporterFactory(
 		typeStr,
 		createDefaultConfig,
-		component.WithTracesExporter(CreateTracesExporter),
-		component.WithLogsExporter(CreateLogsExporter))
+		component.WithTracesExporter(createTracesExporter, stability),
+		component.WithLogsExporter(createLogsExporter, component.StabilityLevelBeta))
 
 }
 
@@ -99,12 +103,12 @@ func generateEndpoint(cfg *Config) (string, error) {
 	}
 }
 
-func CreateTracesExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.TracesExporter, error) {
+func createTracesExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.TracesExporter, error) {
 	exporterConfig := cfg.(*Config)
 	return newLogzioTracesExporter(exporterConfig, params)
 }
 
-func CreateLogsExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.LogsExporter, error) {
+func createLogsExporter(_ context.Context, params component.ExporterCreateSettings, cfg config.Exporter) (component.LogsExporter, error) {
 	exporterConfig := cfg.(*Config)
 	return newLogzioLogsExporter(exporterConfig, params)
 }

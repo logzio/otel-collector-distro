@@ -1,4 +1,4 @@
-name: build
+name: build atrifacts
 on:
   release:
     types: [published]
@@ -25,7 +25,7 @@ jobs:
         run: make otelcol-logzio-${{ matrix.os_arch }}
         working-directory: ./otelbuilder
       - name: compress
-        run: tar -czvf otelcol-logzio-${{ matrix.os_arch }}.tar.gz ./otelcol-logzio-${{ matrix.os_arch }}
+        run: tar -czvf otelcol-logzio-${{ matrix.os_arch }}.tar.gz otelcol-logzio-${{ matrix.os_arch }}
         working-directory: ./otelbuilder/cmd
       - name: upload artifacts to release
         uses: softprops/action-gh-release@v1

@@ -34,7 +34,7 @@ func TestTransformToLogzioSpanBytes(tester *testing.T) {
 	if err != nil {
 		fmt.Println("json.Unmarshal")
 	}
-	logzioSpan, err := TransformToLogzioSpanBytes(&span)
+	logzioSpan, err := transformToLogzioSpanBytes(&span)
 	if err != nil {
 		tester.Fatalf(err.Error())
 	}

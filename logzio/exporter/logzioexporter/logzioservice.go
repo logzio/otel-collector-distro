@@ -30,8 +30,8 @@ type LogzioService struct {
 	Type          string `json:"type"`
 }
 
-// NewLogzioService creates a new logzio service from a span
-func NewLogzioService(span *model.Span) LogzioService {
+// newLogzioService creates a new logzio service from a span
+func newLogzioService(span *model.Span) LogzioService {
 	service := LogzioService{
 		ServiceName:   span.Process.ServiceName,
 		OperationName: span.OperationName,
