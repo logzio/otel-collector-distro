@@ -1,0 +1,4 @@
+export OPAMP_ENDPOINT=ws://127.0.0.1:3001/v1/opamp
+export OPAMP_SECRET_KEY=ada2d0a3-4523-4b16-aae9-1aefbe88e9c4
+export OPAMP_AGENT_NAME=yoti
+./collector

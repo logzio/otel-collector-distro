@@ -1,0 +1,5 @@
+endpoint: ws://192.168.0.43:3000/v1/opamp
+secret_key: ll
+agent_id: 9fd2cc3f-6026-499e-9e61-a6d9d0f838d2
+labels: configuration=logzio2
+agent_name: yotam-collector
