@@ -19,7 +19,7 @@ jobs:
       - name: Install go tools
         run: make install-tools
       - name: Install deps
-        run: sudo apt-get install build-essential
+        run: sudo apt-get install build-essential gcc-multilib g++-multilib
       - name: Install builder
         run: make install-builder
         working-directory: ./otelbuilder
