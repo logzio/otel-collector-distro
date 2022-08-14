@@ -8,7 +8,7 @@ jobs:
       matrix:
         os_arch: [ darwin_amd64, linux_amd64, linux_arm64, linux_arm  ]
     name: publish artifacts
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -24,14 +24,8 @@ jobs:
       - name: build artifacts
         run: make otelcol-logzio-${{ matrix.os_arch }}
         working-directory: ./otelbuilder
-      - name: mkdir
-        run: mkdir -p ./artifacts
-        working-directory: ./otelbuilder/cmd
-      - name: mv binary
-        run: mv otelcol-logzio-${{ matrix.os_arch }} ./artifacts
-        working-directory: ./otelbuilder/cmd
       - name: compress
-        run: tar -czf otelcol-logzio-${{ matrix.os_arch }}.tar.gz artifacts
+        run: tar -cvf otelcol-logzio-${{ matrix.os_arch }}.tar.gz otelcol-logzio-${{ matrix.os_arch }}
         working-directory: ./otelbuilder/cmd
       - name: upload artifacts to release
         uses: softprops/action-gh-release@v1
@@ -39,7 +33,4 @@ jobs:
         with:
           files: |
             ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz
-            ./otelbuilder/cmd/artifacts/otelcol-logzio-${{ matrix.os_arch }}
-
-
-
+            ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}
