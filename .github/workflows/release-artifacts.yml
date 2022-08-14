@@ -32,7 +32,7 @@ jobs:
           cwd: ./otelbuilder/cmd
           files: |
             ./otelcol-logzio-${{ matrix.os_arch }}
-          outPath: otelcol-logzio-${{ matrix.os_arch }}.tar.gz
+          outPath: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz
 #      - name: compress
 #        run: tar -cvzf otelcol-logzio-${{ matrix.os_arch }}.tar.gz otelcol-logzio-${{ matrix.os_arch }}
 #        working-directory: ./otelbuilder/cmd
