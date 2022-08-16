@@ -83,40 +83,43 @@ For the default and some example configs, see the [otel-config](/otel-config/) d
 For general configuration help, see the [openTelemetry docs](https://opentelemetry.io/docs/collector/configuration/).
 #### Logz.io opentelemetry collector distro components
 
-| Receiver                        | Processor                     | Exporter                           | Extensions             |
-|---------------------------------|-------------------------------|------------------------------------|------------------------|
-| otlpreceiver                    | attributesprocessor           | `logzioexporter`                   | ballastextension       |
-| awscontainerinsightreceiver     | resourceprocessor             | `jsonlogexporter`                  | zpagesextension        |
-| awsecscontainermetricsreceiver  | batchprocessor                | loggingexporter                    | bearertokenauthextension|
-| awsxrayreceiver                 | memorylimiterprocessor        | otlpexporter                       | healthcheckextension   |
-| carbonreceiver                  | probabilisticsamplerprocessor | fileexporter                       | oidcauthextension      |
-| collectdreceiver                | metricstransformprocessor     | otlphttpexporter                   | pprofextension         |
-| dockerstatsreceiver             | spanprocessor                 | prometheusexporter                 |                        |
-| dotnetdiagnosticsreceiver       | filterprocessor               | prometheusremotewriteexporter      |                        |
-| filelogreceiver                 | resourcedetectionprocessor    |                                    |                        |
-| fluentforwardreceiver           | groupbyattrsprocessor         |                                    |                        |
-| googlecloudspannerreceiver      | groupbytraceprocessor         |                                    |                        |
-| hostmetricsreceiver             | routingprocessor              |                                    |                        |
-| jaegerreceiver                  | spanmetricsprocessor          |                                    |                        |
-| jmxreceiver                     | tailsamplingprocessor         |                                    |                        |
-| journaldreceiver                |                               |                                    |                        |
-| k8seventsreceiver               |                               |                                    |                        |
-| kafkametricsreceiver            |                               |                                    |                        |
-| kafkareceiver                   |                               |                                    |                        |
-| opencensusreceiver              |                               |                                    |                        |
-| podmanreceiver                  |                               |                                    |                        |
-| prometheusreceiver              |                               |                                    |                        |
-| receivercreator                 |                               |                                    |                        |
-| redisreceiver                   |                               |                                    |                        |
-| sapmreceiver                    |                               |                                    |                        |
-| signalfxreceiver                |                               |                                    |                        |
-| simpleprometheusreceiver        |                               |                                    |                        |
-| splunkhecreceiver               |                               |                                    |                        |
-| statsdreceiver                  |                               |                                    |                        |
-| syslogreceiver                  |                               |                                    |                        |
-| tcplogreceiver                  |                               |                                    |                        |
-| udplogreceiver                  |                               |                                    |                        |
-| wavefrontreceiver               |                               |                                    |                        |
-| windowsperfcountersreceiver     |                               |                                    |                        |
-| zipkinreceiver                  |                               |                                    |                        |
-| zookeeperreceiver               |                               |                                    |                        |
+| Receiver                      | Processor                     | Exporter                           | Extensions             |
+|-------------------------------|-------------------------------|------------------------------------|------------------------|
+| otlpreceiver                  | attributesprocessor           | `logzioexporter`                   | ballastextension       |
+| awscontainerinsightreceiver   | resourceprocessor             | `jsonlogexporter`                  | zpagesextension        |
+| awsecscontainermetricsreceiver | batchprocessor                | loggingexporter                    | bearertokenauthextension|
+| awsxrayreceiver               | memorylimiterprocessor        | otlpexporter                       | healthcheckextension   |
+| carbonreceiver                | probabilisticsamplerprocessor | fileexporter                       | oidcauthextension      |
+| collectdreceiver              | metricstransformprocessor     | otlphttpexporter                   | pprofextension         |
+| dockerstatsreceiver           | spanprocessor                 | prometheusexporter                 |                        |
+| dotnetdiagnosticsreceiver     | filterprocessor               | prometheusremotewriteexporter      |                        |
+| filelogreceiver               | resourcedetectionprocessor    |                                    |                        |
+| fluentforwardreceiver         | groupbyattrsprocessor         |                                    |                        |
+| googlecloudspannerreceiver    | groupbytraceprocessor         |                                    |                        |
+| hostmetricsreceiver           | routingprocessor              |                                    |                        |
+| jaegerreceiver                | spanmetricsprocessor          |                                    |                        |
+| jmxreceiver                   | tailsamplingprocessor         |                                    |                        |
+| journaldreceiver              |                               |                                    |                        |
+| k8seventsreceiver             |                               |                                    |                        |
+| kafkametricsreceiver          |                               |                                    |                        |
+| kafkareceiver                 |                               |                                    |                        |
+| opencensusreceiver            |                               |                                    |                        |
+| podmanreceiver                |                               |                                    |                        |
+| prometheusreceiver            |                               |                                    |                        |
+| receivercreator               |                               |                                    |                        |
+| redisreceiver                 |                               |                                    |                        |
+| sapmreceiver                  |                               |                                    |                        |
+| signalfxreceiver              |                               |                                    |                        |
+| simpleprometheusreceiver      |                               |                                    |                        |
+| splunkhecreceiver             |                               |                                    |                        |
+| statsdreceiver                |                               |                                    |                        |
+| syslogreceiver                |                               |                                    |                        |
+| tcplogreceiver                |                               |                                    |                        |
+| udplogreceiver                |                               |                                    |                        |
+| wavefrontreceiver             |                               |                                    |                        |
+| windowsperfcountersreceiver   |                               |                                    |                        |
+| windowseventlogreceiver       |                               |                                    |                        |
+| zipkinreceiver                |                               |                                    |                        |
+| zookeeperreceiver             |                               |                                    |                        |
+
+
