@@ -84,11 +84,15 @@ lint: install-builder generate-sources
 
 # build collector distro binaries for all supported os arch combinations
 .PHONY: otelcol-logzio-all-sys
-otelcol-logzio-all-sys: otelcol-logzio-darwin_amd64 otelcol-logzio-linux_amd64 otelcol-logzio-windows_amd64 otelcol-logzio-linux_arm64 otelcol-logzio-linux_arm
+otelcol-logzio-all-sys: otelcol-logzio-darwin_amd64 otelcol-logzio-linux_amd64 otelcol-logzio-windows_amd64 otelcol-logzio-linux_arm64 otelcol-logzio-linux_arm otelcol-logzio-darwin_arm64
 
 .PHONY: otelcol-logzio-darwin_amd64
 otelcol-logzio-darwin_amd64:
 	CGO_ENABLED=1 GOOS=darwin  GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_amd64
+
+.PHONY: otelcol-logzio-darwin_arm64
+otelcol-logzio-darwin_arm64:
+	CGO_ENABLED=1 GOOS=darwin  GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_arm64
 
 .PHONY: otelcol-logzio-linux_amd64
 otelcol-logzio-linux_amd64:
