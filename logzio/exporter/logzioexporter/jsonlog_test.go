@@ -17,7 +17,7 @@ package logzioexporter
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -47,13 +47,13 @@ func GenerateLogRecordWithMultiTypeValues() plog.LogRecord {
 
 func TestConvertLogRecordToJSON(t *testing.T) {
 	logger := hclog.NewNullLogger()
-	type ConvertLogRecordToJSONTest struct {
+	type convertLogRecordToJSONTest struct {
 		log      plog.LogRecord
 		resource pcommon.Resource
 		expected map[string]interface{}
 	}
 
-	var ConvertLogRecordToJSONTests = []ConvertLogRecordToJSONTest{
+	var convertLogRecordToJSONTests = []convertLogRecordToJSONTest{
 		{GenerateLogRecordWithNestedBody(),
 			pcommon.NewResource(),
 			map[string]interface{}{
@@ -82,7 +82,7 @@ func TestConvertLogRecordToJSON(t *testing.T) {
 			},
 		},
 	}
-	for _, test := range ConvertLogRecordToJSONTests {
+	for _, test := range convertLogRecordToJSONTests {
 		output := convertLogRecordToJSON(test.log, test.resource, logger)
 		require.Equal(t, output, test.expected)
 	}
@@ -91,7 +91,7 @@ func TestConvertLogRecordToJSON(t *testing.T) {
 func TestSetTimeStamp(t *testing.T) {
 	var recordedRequests []byte
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		recordedRequests, _ = ioutil.ReadAll(req.Body)
+		recordedRequests, _ = io.ReadAll(req.Body)
 		rw.WriteHeader(http.StatusOK)
 	}))
 	ld := GenerateLogsOneEmptyTimestamp()

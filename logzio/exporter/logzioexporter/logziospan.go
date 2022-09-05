@@ -27,8 +27,8 @@ const (
 	TagDotReplacementCharacter = "@"
 )
 
-// LogzioSpan is same as esSpan with a few different json field names and an addition on type field.
-type LogzioSpan struct {
+// logzioSpan is same as esSpan with a few different json field names and an addition on type field.
+type logzioSpan struct {
 	TraceID         dbmodel.TraceID        `json:"traceID"`
 	OperationName   string                 `json:"operationName,omitempty"`
 	SpanID          dbmodel.SpanID         `json:"spanID"`
@@ -58,7 +58,7 @@ func getTagsValues(tags []model.KeyValue) []string {
 func transformToLogzioSpanBytes(span *model.Span) ([]byte, error) {
 	spanConverter := dbmodel.NewFromDomain(true, getTagsValues(span.Tags), TagDotReplacementCharacter)
 	jsonSpan := spanConverter.FromDomainEmbedProcess(span)
-	logzioSpan := LogzioSpan{
+	logzSpan := logzioSpan{
 		TraceID:         jsonSpan.TraceID,
 		OperationName:   jsonSpan.OperationName,
 		SpanID:          jsonSpan.SpanID,
@@ -74,11 +74,11 @@ func transformToLogzioSpanBytes(span *model.Span) ([]byte, error) {
 		Logs:            jsonSpan.Logs,
 		Type:            spanLogType,
 	}
-	return json.Marshal(logzioSpan)
+	return json.Marshal(logzSpan)
 }
 
 // transformToDbModelSpan coverts logz.io span to ElasticSearch span
-func (span *LogzioSpan) transformToDbModelSpan() *dbmodel.Span {
+func (span *logzioSpan) transformToDbModelSpan() *dbmodel.Span {
 	return &dbmodel.Span{
 		OperationName:   span.OperationName,
 		Process:         span.Process,
