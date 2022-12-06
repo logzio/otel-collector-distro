@@ -6,9 +6,6 @@ dist:
   output_path: ./cmd
   version: "0.66.0"
 exporters:
-    # Maintained exporters
-  - gomod: "github.com/logzio/otel-collector-distro/logzio/exporter/logzioexporter v0.0.1"
-    path: ./../logzio/exporter/logzioexporter
     # Upstream exporters
   - import: go.opentelemetry.io/collector/exporter/loggingexporter
     gomod: go.opentelemetry.io/collector v0.66.0
@@ -18,6 +15,7 @@ exporters:
     gomod: go.opentelemetry.io/collector v0.66.0
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/fileexporter v0.66.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.66.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/logzioexporter v0.66.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.66.0"
 processors:
   # Upstream processors
