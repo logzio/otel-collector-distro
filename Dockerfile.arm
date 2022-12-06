@@ -1,4 +1,4 @@
-FROM golang:1.17.11-alpine as builder
+FROM golang:1.18.6-alpine as builder
 ADD . /src
 WORKDIR /src/otelbuilder/
 ENV CGO_ENABLED=0

@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -29,14 +28,13 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/jaegertracing/jaeger/model"
 	"github.com/jaegertracing/jaeger/pkg/cache"
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/consumererror"
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	"go.opentelemetry.io/collector/pdata/plog"
+	"go.opentelemetry.io/collector/pdata/ptrace"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/protobuf/proto"
-
-	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/exporter/exporterhelper"
-	"go.opentelemetry.io/collector/pdata/ptrace"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/jaeger"
 )
@@ -91,8 +89,9 @@ func newLogzioTracesExporter(config *Config, set component.ExporterCreateSetting
 	}
 	config.checkAndWarnDeprecatedOptions(exporter.logger)
 	return exporterhelper.NewTracesExporter(
-		config,
+		context.TODO(),
 		set,
+		config,
 		exporter.pushTraceData,
 		exporterhelper.WithStart(exporter.start),
 		// disable since we rely on http.Client timeout logic.
@@ -115,8 +114,9 @@ func newLogzioLogsExporter(config *Config, set component.ExporterCreateSettings)
 	}
 	config.checkAndWarnDeprecatedOptions(exporter.logger)
 	return exporterhelper.NewLogsExporter(
-		config,
+		context.TODO(),
 		set,
+		config,
 		exporter.pushLogData,
 		exporterhelper.WithStart(exporter.start),
 		// disable since we rely on http.Client timeout logic.
@@ -127,7 +127,7 @@ func newLogzioLogsExporter(config *Config, set component.ExporterCreateSettings)
 }
 
 func (exporter *logzioExporter) start(_ context.Context, host component.Host) error {
-	client, err := exporter.config.HTTPClientSettings.ToClient(host.GetExtensions(), exporter.settings)
+	client, err := exporter.config.HTTPClientSettings.ToClient(host, exporter.settings)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (exporter *logzioExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 			logRecords := scopeLogs.At(j).LogRecords()
 			for k := 0; k < logRecords.Len(); k++ {
 				log := logRecords.At(k)
-				jsonLog := ConvertLogRecordToJSON(log, resource, exporter.logger)
+				jsonLog := convertLogRecordToJSON(log, resource, exporter.logger)
 				logzioLog, err := json.Marshal(jsonLog)
 				if err != nil {
 					return err
@@ -175,7 +175,7 @@ func (exporter *logzioExporter) pushTraceData(ctx context.Context, traces ptrace
 			span.Process = batch.Process
 			span.Tags = exporter.dropEmptyTags(span.Tags)
 			span.Process.Tags = exporter.dropEmptyTags(span.Process.Tags)
-			logzioSpan, transformErr := TransformToLogzioSpanBytes(span)
+			logzioSpan, transformErr := transformToLogzioSpanBytes(span)
 			if transformErr != nil {
 				return transformErr
 			}
@@ -187,7 +187,7 @@ func (exporter *logzioExporter) pushTraceData(ctx context.Context, traces ptrace
 			// if the service hash already exists in cache: skip
 			// else: store service in cache and send to logz.io
 			// this prevents sending duplicate logzio services
-			service := NewLogzioService(span)
+			service := newLogzioService(span)
 			serviceHash, hashErr := service.HashCode()
 			if exporter.serviceCache.Get(serviceHash) == nil || hashErr != nil {
 				if hashErr == nil {
@@ -226,7 +226,7 @@ func (exporter *logzioExporter) export(ctx context.Context, url string, request 
 
 	defer func() {
 		// Discard any remaining response body when we are done reading.
-		io.CopyN(ioutil.Discard, resp.Body, maxHTTPResponseReadBytes) // nolint:errcheck
+		io.CopyN(io.Discard, resp.Body, maxHTTPResponseReadBytes) // nolint:errcheck
 		resp.Body.Close()
 	}()
 	exporter.logger.Debug(fmt.Sprintf("Response status code: %d", resp.StatusCode))
