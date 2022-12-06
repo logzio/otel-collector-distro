@@ -17,7 +17,7 @@ The script below will perform the following steps:
 - Configure the related environment variables and run the binary
 
 ```shell
-curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.59.0/otelcol-logzio-darwin_amd64 > otelcol-logzio-darwin_amd64
+curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.66.0/otelcol-logzio-darwin_amd64 > otelcol-logzio-darwin_amd64
 chmod +x otelcol-logzio-darwin_amd64
 curl -L https://raw.githubusercontent.com/logzio/otel-collector-distro/master/otel-config/macos.yml > macos.yml
 export LOGS_TOKEN=<<logzio_logs_token>> 
@@ -36,7 +36,7 @@ The script below will perform the following steps:
 
 
 ```shell
-curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.59.0/otelcol-logzio-linux_amd64 > otelcol-logzio-linux_amd64
+curl -L  https://github.com/logzio/otel-collector-distro/releases/download/v0.66.0/otelcol-logzio-linux_amd64 > otelcol-logzio-linux_amd64
 chmod +x otelcol-logzio-linux_amd64
 curl -L https://raw.githubusercontent.com/logzio/otel-collector-distro/development/otel-config/linux.yml > linux.yml
 export LOGS_TOKEN=<<logzio_logs_token>> 
