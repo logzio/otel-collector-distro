@@ -1,8 +1,8 @@
 BINARY_NAME ?= otelcol-logzio
-BUILDER_VERSION ?= 0.66.0
+BUILDER_VERSION ?= 0.75.0
 BUILDER_REPO ?= github.com/open-telemetry/opentelemetry-collector
 BUILDER_BIN_NAME ?= opentelemetry-collector-builder
-VERSION ?= 0.66.0
+VERSION ?= 0.75.0
 
 GO ?= go
 OS ?= $(shell uname -s | tr A-Z a-z)
@@ -15,8 +15,9 @@ endif
 
 .PHONY: _install-bin
 _install-bin:
-	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_$(PLATFORM)_amd64
+	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_$(PLATFORM)_amd64
 	@chmod +x $(BUILDER_BIN_NAME)
+
 
 # install otelcol builder
 .PHONY: install-builder
