@@ -20,7 +20,7 @@ exporters:
 processors:
   # Upstream processors
   - import: go.opentelemetry.io/collector/processor/batchprocessor
-    gomod: go.opentelemetry.io/collector v0.75.0
+    gomod: go.opentelemetry.io/collector v0.74.0
   - import: go.opentelemetry.io/collector/processor/memorylimiterprocessor
     gomod: go.opentelemetry.io/collector v0.75.0
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.75.0"
