@@ -33,6 +33,11 @@ jobs:
           files: |
             ./otelcol-logzio-${{ matrix.os_arch }}.exe
           outPath: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz
+      - name: zip artifacts
+        uses: papeloto/action-zip@v1
+        with:
+          files: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.exe
+          dest: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.zip
       - name: upload artifacts to release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -40,6 +45,4 @@ jobs:
           files: |
             ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.exe
             ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz
-
-
-
+            ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.zip
