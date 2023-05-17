@@ -7,7 +7,6 @@ dist:
   version: "0.75.0"
 exporters:
     # Upstream exporters
-    # Since include-code was removed we need to manually add all core components that we want to include:
     # https://github.com/open-telemetry/opentelemetry-collector/pull/4616
   - gomod: go.opentelemetry.io/collector/exporter/loggingexporter v0.75.0
   - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.75.0
@@ -18,6 +17,7 @@ exporters:
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.75.0"
 processors:
   # Upstream processors
+  # https://github.com/open-telemetry/opentelemetry-collector/pull/4616
   - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.75.0
   - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.75.0
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.75.0"
@@ -35,6 +35,7 @@ processors:
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor v0.75.0"
 receivers:
   # Upstream receivers
+  # https://github.com/open-telemetry/opentelemetry-collector/pull/4616
   - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.75.0
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/windowseventlogreceiver v0.75.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver v0.75.0"
@@ -43,7 +44,7 @@ receivers:
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/carbonreceiver v0.75.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8seventsreceiver v0.75.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/collectdreceiver v0.75.0"
-#  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/dockerstatsreceiver v0.75.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/dockerstatsreceiver v0.75.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/dotnetdiagnosticsreceiver v0.75.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/filelogreceiver v0.75.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/fluentforwardreceiver v0.75.0"
