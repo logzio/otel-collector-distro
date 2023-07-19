@@ -48,7 +48,6 @@ receivers:
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8seventsreceiver v0.81.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/collectdreceiver v0.81.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/dockerstatsreceiver v0.81.0"
-  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/dotnetdiagnosticsreceiver v0.81.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/filelogreceiver v0.81.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/fluentforwardreceiver v0.81.0"
   - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/googlecloudspannerreceiver v0.81.0"
