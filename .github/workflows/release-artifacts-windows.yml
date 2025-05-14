@@ -1,46 +1,58 @@
-name: Publish artifacts on a new release windows
+name: Publish artifacts on a new release (Windows on Ubuntu)
 on:
   release:
     types: [published]
+
 jobs:
   publish_artifacts:
+    name: Publish Windows artifacts on Ubuntu
+    runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        os_arch: [ windows_amd64  ]
-    name: publish artifacts
-    runs-on: macos-latest
+        os_arch: [windows_amd64]
+
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.19"
+          go-version: '1.23'
+
       - name: Install go tools
         run: make install-tools
+
       - name: Install builder
+        working-directory: ./otelbuilder
         run: make install-builder
+
+      - name: Build Windows binary
         working-directory: ./otelbuilder
-      - name: build artifacts
         run: make otelcol-logzio-${{ matrix.os_arch }}
-        working-directory: ./otelbuilder
-      - name: compress artifacts
-        uses: a7ul/tar-action@v1.1.0
-        id: compress
-        with:
-          command: c
-          cwd: ./otelbuilder/cmd
-          files: |
-            ./otelcol-logzio-${{ matrix.os_arch }}.exe
-          outPath: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz
-      - name: zip artifacts
-        uses: papeloto/action-zip@v1
-        with:
-          files: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.exe
-          dest: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.zip
-      - name: upload artifacts to release
-        uses: softprops/action-gh-release@v1
+
+      - name: Compress .exe to tar.gz
+        run: |
+          tar czf \
+            ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz \
+            -C ./otelbuilder/cmd \
+            otelcol-logzio-${{ matrix.os_arch }}.exe
+
+      - name: Install zip utility
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip
+
+      - name: Compress .exe to zip
+        run: |
+          zip -j \
+            ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.zip \
+            ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.exe
+
+      - name: Upload artifacts to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
         with:
           files: |
             ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.exe
