@@ -14,7 +14,7 @@ ALL_MODULES := $(shell find ./logzio/ -type f -name "go.mod" -exec dirname {} \;
 # Build
 .PHONY: build
 build:
-	@$(MAKE) -C ./otelcolbuilder/ build
+	@$(MAKE) -C ./otelbuilder/ build
 
 
 .PHONY: _build
