@@ -15,7 +15,7 @@ endif
 
 .PHONY: _install-bin
 _install-bin:
-	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_linux_amd64
+	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_darwin_amd64
 	@chmod +x $(BUILDER_BIN_NAME)
 
 
@@ -87,23 +87,23 @@ otelcol-logzio-all-sys: otelcol-logzio-darwin_amd64 otelcol-logzio-linux_amd64 o
 
 .PHONY: otelcol-logzio-darwin_amd64
 otelcol-logzio-darwin_amd64:
-	CGO_ENABLED=1 GOOS=darwin  GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_amd64
+	CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_amd64
 
 .PHONY: otelcol-logzio-darwin_arm64
 otelcol-logzio-darwin_arm64:
-	CGO_ENABLED=1 GOOS=darwin  GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_arm64
+	CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_arm64
 
 .PHONY: otelcol-logzio-linux_amd64
 otelcol-logzio-linux_amd64:
-	GOOS=linux   GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_amd64
+	GOOS=linux GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_amd64
 
 .PHONY: otelcol-logzio-linux_arm64
 otelcol-logzio-linux_arm64:
-	GOOS=linux   GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_arm64
+	GOOS=linux GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_arm64
 
 .PHONY: otelcol-logzio-linux_arm
 otelcol-logzio-linux_arm:
-	GOOS=linux   GOARCH=arm $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_arm
+	GOOS=linux GOARCH=arm $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_arm
 
 .PHONY: otelcol-logzio-windows_amd64
 otelcol-logzio-windows_amd64:
