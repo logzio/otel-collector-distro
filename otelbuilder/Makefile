@@ -12,10 +12,13 @@ else
 CGO_ENABLED ?= 0
 endif
 
+GOOS   ?= $(shell go env GOOS)
+GOARCH ?= $(shell go env GOARCH)
 
 .PHONY: _install-bin
 _install-bin:
-	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_darwin_amd64
+	@echo $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_$(GOOS)_$(GOARCH)
+	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_$(GOOS)_$(GOARCH)
 	@chmod +x $(BUILDER_BIN_NAME)
 
 
