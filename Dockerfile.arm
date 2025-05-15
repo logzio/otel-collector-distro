@@ -1,4 +1,4 @@
-FROM golang:1.19.8-alpine as builder
+FROM golang:1.23.9-alpine as builder
 ADD . /src
 WORKDIR /src/otelbuilder/
 ENV CGO_ENABLED=0
@@ -15,10 +15,10 @@ COPY --from=builder /src/otel-config/default.yml /etc/otel/config.yaml
 
 FROM scratch
 ARG BUILD_TAG=latest
-ENV TAG $BUILD_TAG
+ENV TAG=$BUILD_TAG
 ARG USER_UID=10001
 USER ${USER_UID}
-ENV HOME /etc/otel/
+ENV HOME=/etc/otel/
 
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /src/otelbuilder/cmd/otelcol-logzio-linux_arm64 /otelcol-logzio
