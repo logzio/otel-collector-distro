@@ -6,7 +6,7 @@ on:
 jobs:
   publish_artifacts:
     name: Publish Windows artifacts on Ubuntu
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
