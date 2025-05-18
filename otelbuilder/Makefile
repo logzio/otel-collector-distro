@@ -1,8 +1,7 @@
 BINARY_NAME ?= otelcol-logzio
-BUILDER_VERSION ?= 0.82.0
-BUILDER_REPO ?= github.com/open-telemetry/opentelemetry-collector
+BUILDER_VERSION ?= 0.109.0
+BUILDER_REPO ?= github.com/open-telemetry/opentelemetry-collector-releases
 BUILDER_BIN_NAME ?= opentelemetry-collector-builder
-VERSION ?= 0.82.0
 
 GO ?= go
 OS ?= $(shell uname -s | tr A-Z a-z)
@@ -13,9 +12,13 @@ else
 CGO_ENABLED ?= 0
 endif
 
+GOOS   ?= $(shell go env GOOS)
+GOARCH ?= $(shell go env GOARCH)
+
 .PHONY: _install-bin
 _install-bin:
-	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_$(PLATFORM)_amd64
+	@echo $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_$(GOOS)_$(GOARCH)
+	@curl -L -o $(BUILDER_BIN_NAME) https://$(BUILDER_REPO)/releases/download/cmd/builder/v$(BUILDER_VERSION)/ocb_$(BUILDER_VERSION)_$(GOOS)_$(GOARCH)
 	@chmod +x $(BUILDER_BIN_NAME)
 
 
@@ -31,8 +34,6 @@ _builder:
 # Need to specify go path because otherwise opentelemetry-collector-builder
 # uses /usr/bin/go which on Github Actions is using preinstalled 1.15.12 by default.
 	CGO_ENABLED=$(CGO_ENABLED) ./$(BUILDER_BIN_NAME) \
-		--go $(GO) \
-		--version "$(VERSION)" \
 		--config otelcol-builder.yaml \
 		--output-path ./cmd \
 		--skip-compilation=$(SKIP_COMPILATION)
@@ -89,23 +90,23 @@ otelcol-logzio-all-sys: otelcol-logzio-darwin_amd64 otelcol-logzio-linux_amd64 o
 
 .PHONY: otelcol-logzio-darwin_amd64
 otelcol-logzio-darwin_amd64:
-	CGO_ENABLED=1 GOOS=darwin  GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_amd64
+	CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_amd64
 
 .PHONY: otelcol-logzio-darwin_arm64
 otelcol-logzio-darwin_arm64:
-	CGO_ENABLED=1 GOOS=darwin  GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_arm64
+	CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-darwin_arm64
 
 .PHONY: otelcol-logzio-linux_amd64
 otelcol-logzio-linux_amd64:
-	GOOS=linux   GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_amd64
+	GOOS=linux GOARCH=amd64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_amd64
 
 .PHONY: otelcol-logzio-linux_arm64
 otelcol-logzio-linux_arm64:
-	GOOS=linux   GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_arm64
+	GOOS=linux GOARCH=arm64 $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_arm64
 
 .PHONY: otelcol-logzio-linux_arm
 otelcol-logzio-linux_arm:
-	GOOS=linux   GOARCH=arm $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_arm
+	GOOS=linux GOARCH=arm $(MAKE) build BINARY_NAME=$(BINARY_NAME)-linux_arm
 
 .PHONY: otelcol-logzio-windows_amd64
 otelcol-logzio-windows_amd64:

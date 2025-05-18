@@ -2,38 +2,44 @@ name: Publish artifacts on a new release
 on:
   release:
     types: [published]
+
 jobs:
   publish_artifacts:
-    strategy:
-      matrix:
-        os_arch: [ darwin_amd64, darwin_arm64, linux_amd64, linux_arm64, linux_arm  ]
-    name: publish artifacts
+    name: Publish artifacts
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os_arch: [darwin_amd64, darwin_arm64, linux_amd64, linux_arm64]
+
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.19"
+          go-version: "1.23"
+
       - name: Install go tools
         run: make install-tools
+
       - name: Install builder
+        working-directory: ./otelbuilder
         run: make install-builder
+
+      - name: Build artifacts
         working-directory: ./otelbuilder
-      - name: build artifacts
         run: make otelcol-logzio-${{ matrix.os_arch }}
-        working-directory: ./otelbuilder
-      - name: compress artifacts
-        uses: a7ul/tar-action@v1.1.0
-        id: compress
-        with:
-          command: c
-          cwd: ./otelbuilder/cmd
-          files: |
-            ./otelcol-logzio-${{ matrix.os_arch }}
-          outPath: ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz
-      - name: upload artifacts to release
+
+      - name: Compress artifact with built-in tar
+        run: |
+          tar czf \
+            ./otelbuilder/cmd/otelcol-logzio-${{ matrix.os_arch }}.tar.gz \
+            -C ./otelbuilder/cmd \
+            otelcol-logzio-${{ matrix.os_arch }}
+
+      - name: Upload artifacts to GitHub Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
